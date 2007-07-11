@@ -1,0 +1,77 @@
+import(grid)
+import(grDevices)
+import(graphics)
+import(stats)
+import(utils)
+
+## hydrosanity.R
+export(
+	hydrosanity,
+	select.sites.BOM.AU,
+	read.catchment.esri_shapefile
+)
+
+## timeblob_plots.R
+export(
+	grid.timeline.plot,
+	grid.timeline.bar,
+	timelineColMapDefault,
+	grid.timeseries.plot,
+	grid.timeseries.plot.superpose,
+	grid.timeseries.steps,
+	hydrosanity.caption,
+	grid.yaxis.log,
+	grid.xaxis.log,
+	lattice.y.prettylog,
+	lattice.x.prettylog,
+	grid.xaxis.POSIXt,
+	panel.geo,
+	panel.interp,
+	panel.map,
+	prepanel.extend.10,
+	prepanel.qqmath.fix
+)
+
+## timeblob.R
+#S3method(start, timeblob)
+#S3method(end, timeblob)
+#S3method(window, timeblob)
+#S3method(aggregate, timeblob)
+export(start.timeblob)
+export(end.timeblob)
+export(window.timeblob)
+export(aggregate.timeblob)
+export(
+	timeblob,
+	is.timeblob,
+	lapply.timeblob.data,
+	sapply.timeblob.data,
+	read.timeblob,
+	start.timeblobs,
+	end.timeblobs,
+	timelim.timeblobs,
+	matchtimes.timeblob,
+	sync.timeblobs,
+	syncTo.timeblobs,
+	common.timestep.timeblobs,
+	summaryMissing.timeblobs,
+	smooth.timeblob,
+	quick.disaccumulate.timeblob,
+	impute.timeblobs,
+	imputeGaps.timeblobs,
+	unimputeGaps.timeblobs,
+	spaceTimeField,
+	gaps,
+	expand.indices,
+	rises,
+	lastTime,
+	truncMonth,
+	truncYear,
+	truncDecade
+)
+
+## this is used by guiDo in the plotAndPlayGTK package
+export(addToLog)
+
+exportPattern("_") # Needed for the Glade interface
+
