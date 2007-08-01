@@ -227,7 +227,7 @@ window.timeblob <- function(x, start=NULL, end=NULL, inclusive=F, return.indices
 			stop("'x' needs a timestep attribute for 'extend=T'")
 		}
 		negTimestep <- paste("-1", timestep)
-		if (length(grep("^[0-9]", timestep)>0)) {
+		if (any(grep("^[0-9]", timestep))) {
 			negTimestep <- paste("-", timestep, sep='')
 		}
 		if (start < start(x)) {
@@ -541,8 +541,8 @@ aggregate.timeblob <- function(x, by="1 year", FUN=mean, fun.qual=c("worst","med
 		tmpQual <- x$Qual
 		# ignore quality codes where data is missing
 		tmpQual[is.na(x$Data)] <- NA
-		# treat disaccumulated values as "suspect" (better than "poor")
-		tmpQual[tmpQual == "disaccumulated"] <- "suspect"
+		# ignore disaccumulated values for aggregation
+		tmpQual[tmpQual == "disaccumulated"] <- "good"
 		# apply function fun.qual to each aggregated group
 		newQual <- tapply(tmpQual, list(dateGroups), FUN=FUN.Qual)
 		newQual[is.na(newVals)] <- NA
@@ -1247,18 +1247,32 @@ timestepTimeFormat <- function(timestep) {
 	return("")
 }
 
+# numeric method
 as.byString <- function(x, digits=getOption("digits"), explicit=F) {
-	if (!identical(class(x), "difftime")) {
-		if (!is.numeric(x)) { stop("'x' must be difftime or numeric") }
-		x <- diff(as.POSIXct(c(0,x)))
-	}
-	it <- paste(format(unclass(x), digits=digits), attr(x, "units"))
-	x <- as.numeric.byString(x)
-	if (x > 28*24*60*60) {
+	#if (!identical(class(x), "difftime")) {
+	#	if (!is.numeric(x)) { stop("'x' must be difftime or numeric") }
+	#	x <- diff(as.POSIXct(c(0,x)))
+	#}
+	
+	if (inherits(x, "difftime")) x <- as.numeric(x, units="secs")
+	stopifnot(is.numeric(x))
+	#x <- as.numeric.byString(x)
+	if (x >= 363*24*60*60) {
+		it <- paste(round(x / (365.25*24*60*60)), "years")
+	} else
+	if (x >= 28*24*60*60) {
 		it <- paste(round(x / (30*24*60*60)), "months")
-	}
-	if (x > 363*24*60*60) {
-		it <- paste(round(x / (365*24*60*60)), "years")
+	} else
+	if (x >= 23*60*60) {
+		it <- paste(round(x / (24*60*60)), "days")
+	} else
+	if (x >= 60*60) {
+		it <- paste(round(x / (60*60)), "hours")
+	} else
+	if (x >= 60) {
+		it <- paste(round(x / (60)), "mins")
+	} else {
+		it <- paste(round(x), "secs")
 	}
 	if (!explicit) { it <- sub("^1 ", "", it) }
 	#it <- sub(" day", " DSTday", it)

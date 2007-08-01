@@ -6,7 +6,7 @@
 
 MAJOR <- "0"
 MINOR <- "8"
-REVISION <- unlist(strsplit("$Revision: 52 $", split=" "))[2]
+REVISION <- unlist(strsplit("$Revision: 57 $", split=" "))[2]
 VERSION <- paste(MAJOR, MINOR, REVISION, sep=".")
 COPYRIGHT <- paste("(c) 2007 Felix Andrews <felix@nfrac.org>\n",
 	" based on Rattle (c) 2006 Graham.Williams@togaware.com")
@@ -51,10 +51,6 @@ if (!exists("StateEnv", environment(), inherits=FALSE)) {
 }
 
 hydrosanity <- function() {
-	stopifnot(require(RGtk2, quietly=TRUE))
-	stopifnot(require(plotAndPlayGTK, quietly=TRUE))
-	stopifnot(require(lattice, quietly=TRUE))
-	
 	if (!is.null(StateEnv$win)) {
 		.hs_on_menu_quit_activate()
 	}

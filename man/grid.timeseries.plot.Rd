@@ -7,7 +7,13 @@
   ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-grid.timeseries.plot(blob.list, xscale = NULL, yscale = NULL, sameScales = T, logScale = F, qualTimeline = F, colMap = NULL, barThickness = unit(0.5,"lines"), auto.key = T, maxLabelChars = 20, pad = unit(1,"lines"), between = unit(0,"lines"), superPos = 1, newScale = T, main = NULL, sub = T, newpage = (superPos==1), nSuperpose = 1, gp = gpar(col=trellis.par.get("superpose.line")$col[superPos], lty = trellis.par.get("superpose.line")$lty[superPos]))
+grid.timeseries.plot(blob.list, xscale = NULL, yscale = NULL, sameScales = T, 
+                     logScale = F, qualTimeline = F, colMap = NULL, 
+		     barThickness = unit(0.5,"lines"), auto.key = T, maxLabelChars = 20, 
+		     pad = unit(1,"lines"), between = unit(0,"lines"), superPos = 1, 
+		     newScale = T, main = NULL, sub = T, newpage = (superPos==1), 
+		     nSuperpose = 1, gp=gpar(col=rep(trellis.par.get("superpose.line")$col, len=superPos)[superPos], 
+		       lty=rep(trellis.par.get("superpose.line")$lty, len=superPos)[superPos]))
 
 grid.timeseries.plot.superpose(superpose.blob.list, allSameScales = F, xscale = NULL, yscale = NULL, logScale = F, sub = T, ...)
 

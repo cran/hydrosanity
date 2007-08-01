@@ -1,6 +1,6 @@
+#import(RGtk2)
 import(grid)
 import(grDevices)
-import(graphics)
 import(stats)
 import(utils)
 

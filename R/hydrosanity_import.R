@@ -16,8 +16,10 @@ updateImportPage <- function() {
 		dfLoc <- dfQual <- dfExtra <- dfRole <- character(length(hsp$data))
 	
 	for (i in seq(along=hsp$data)) {
-		myLength <- end(hsp$data[[i]]) - start(hsp$data[[i]])
-		myAvgFreq <- myLength / nrow(hsp$data[[i]])
+		# note this may overflow as a difftime, so do as numeric
+		myLength <- as.numeric(end(hsp$data[[i]])) - 
+			as.numeric(start(hsp$data[[i]]))
+		#myAvgFreq <- myLength / nrow(hsp$data[[i]])
 		
 		dfID[i] <- names(hsp$data)[i]
 		dfName[i] <- attr(hsp$data[[i]], "sitename")
@@ -190,7 +192,7 @@ updateImportPage <- function() {
 	}
 	
 	for (i in seq(along=filenames)) {
-		result <- guiDo(string=import.string[i])
+		result <- guiDo(import.string[i])
 		setStatusBar("Imported file ", dQuote(basename(filenames[i])),
 			" to hsp$data[[", dQuote(dataName[i]), "]]")
 		# mark as rain/flow/etc
@@ -305,7 +307,6 @@ updateImportPage <- function() {
 		check.names=F,
 		stringsAsFactors=F
 	)
-	tmp.meta <<- metadata
 	newMeta <- guiDo(editAsText(metadata), doLog=F)
 	if (identical(metadata, newMeta)) {
 		return()
@@ -313,16 +314,23 @@ updateImportPage <- function() {
 	
 	# TODO: check that number of rows is the same...
 	
-	maybeUpdate <- function(assign.expr, envir=parent.frame()) {
+	maybeUpdate <- function(assign.expr, subs=list(i=eval(i,envir)), envir=parent.frame()) {
 		expr <- substitute(assign.expr)
 		oldval <- eval(expr[[2]], envir=envir)
 		newval <- eval(expr[[3]], envir=envir)
+		#print(expr)
+		#print(oldval)
+		#print(newval)
 		if (is.null(newval)) { return() }
 		if (any(is.na(newval))) { return() }
 		if (any(newval == "")) { return() }
 		if (identical(oldval, newval)) { return() }
 		# assign as literal value
 		expr[[3]] <- newval
+		# evaluate indices in assignment target
+		substitute.call <- function(the.call, ...) 
+			do.call(substitute, list(the.call, ...))
+		expr[[2]] <- substitute.call(expr[[2]], subs)
 		guiDo(call=expr)
 		return(TRUE)
 	}
@@ -331,7 +339,7 @@ updateImportPage <- function() {
 	for (k in seq(along=blobIndices)) {
 		# 'i' indexes hsp$data; 'k' indexes metadata (subset)
 		i <- blobIndices[k]
-		maybeUpdate(names(hsp$data)[i] <- newMeta$ItemName[k])
+		maybeUpdate(names(hsp$data)[i] <- newMeta$SiteID[k])
 		maybeUpdate(attr(hsp$data[[i]], "sitename") <- newMeta$SiteName[k])
 		maybeUpdate(attr(hsp$data[[i]], "dataname") <- newMeta$DataName[k])
 		maybeUpdate(attr(hsp$data[[i]], "role") <- newMeta$Role[k])
@@ -417,7 +425,7 @@ updateImportPage <- function() {
 			'x2 <- {', factorCmdRaw, '}',
 			'factor(x2, ordered=T, exclude=NULL)',
 		'}')
-	guiDo(string=factor_fn.string)
+	guiDo(factor_fn.string)
 	
 	for (i in blobIndices) {
 		blobName <- names(hsp$data)[i]
@@ -536,7 +544,7 @@ updateImportPage <- function() {
 		export.string <- sprintf(
 			'%s(tmp.data, %s%s)', 
 			exportFn, dQuote(filename), myOptionString)
-		guiDo(string=export.string)
+		guiDo(export.string)
 		setStatusBar("Exported data to ", dQuote(filename))
 			
 	} else {
@@ -567,7 +575,7 @@ updateImportPage <- function() {
 			export.string <- sprintf(
 				'%s(tmp.data, %s%s)', 
 				exportFn, dQuote(myFilename), myOptionString)
-			guiDo(string=export.string)
+			guiDo(export.string)
 			setStatusBar("Exported data item ", dQuote(x), " to ", 
 				dQuote(myFilename))
 		}

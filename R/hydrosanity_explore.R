@@ -162,10 +162,11 @@ updateExplorePage <- function() {
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="timeseries", 
+	guiDo(playwith(plot.call=plot.call, name="timeseries", 
 		buttons=hydrosanityButtons[c('zoomin','zoomout','centre','logscale','setperiod')],
-		extra.buttons=NULL, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+		extra.buttons=NULL, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
@@ -230,7 +231,7 @@ updateExplorePage <- function() {
 	
 	# make.groups
 	tmpObjs <- c(tmpObjs, 'tmp.groups')
-	guiDo(string=sprintf(
+	guiDo(sprintf(
 		'tmp.groups <- make.groups(%s)',
 		paste(sep='', collapse=', ',
 			make.names(names(tmp.data)), 
@@ -269,10 +270,12 @@ updateExplorePage <- function() {
 				0.75, 0.9, 0.99, 0.999))
 			plot.call$scales$x <- quote(list(
 				at=qnorm(tmp.probs), labels=tmp.probs * 100))
+			plot.call$xlim <- quote(qnorm(c(0.999, 0.001)))
 		} else {
 			guiDo(tmp.probs <- seq(0, 1, by=0.1))
 			plot.call$scales$x <- quote(list(
 				at=tmp.probs, labels=tmp.probs * 100))
+			plot.call$xlim <- quote(1:0)
 		}
 	}
 	plot.call$yscale.components <- quote(lattice.y.prettylog)
@@ -298,10 +301,10 @@ updateExplorePage <- function() {
 	}))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="distribution", 
-		extra.buttons=plotAndPlayButtons[c('logscale')],
-		labels=idLabels, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+	guiDo(playwith(plot.call=plot.call, name="distribution", 
+		extra.buttons=list("logscale"), labels=idLabels, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
@@ -429,10 +432,11 @@ updateExplorePage <- function() {
 	idLabels <- rep(format(tmp.data$Time, "%Y"), nBlobs)
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="seasonality", 
-		extra.buttons=plotAndPlayButtons[c('logscale')],
-		labels=idLabels, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+	guiDo(playwith(plot.call=plot.call, name="seasonality", 
+		extra.buttons=list("logscale"),
+		labels=idLabels, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))

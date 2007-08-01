@@ -107,9 +107,10 @@ updateTimePeriodPage <- function() {
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="site map", 
+	guiDo(playwith(plot.call=plot.call, name="site map", 
 		extra.buttons=hydrosanityButtons[c('setregion')],
-		eval.args="^tmp", restore.on.close=StateEnv$win), doLog=F)
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	guiDo(rm(tmp.sites))
 	
@@ -156,10 +157,11 @@ updateTimePeriodPage <- function() {
 	plot.call <- quote(grid.timeline.plot(tmp.coverage, xscale=hsp$timePeriod))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="timeline", 
+	guiDo(playwith(plot.call=plot.call, name="timeline", 
 		buttons=hydrosanityButtons[c('zoomin','zoomout','centre','setperiod')],
-		extra.buttons=NULL, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+		extra.buttons=NULL, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	guiDo(rm(tmp.sites, tmp.coverage))
 	
@@ -310,10 +312,11 @@ updateTimePeriodPage <- function() {
 	plot.call$colMap <- if (!plotQualCodes) { NA }
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="timeline", 
+	guiDo(playwith(plot.call=plot.call, name="timeline", 
 		buttons=hydrosanityButtons[c('zoomin','zoomout','centre','setperiod')],
-		extra.buttons=NULL, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+		extra.buttons=NULL, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	setStatusBar("Generated timeline plot")
 }
@@ -370,8 +373,9 @@ updateTimePeriodPage <- function() {
 			tmp.elev <- lapply(hsp$data[tmp.names], attr, "elevation")
 			tmp.elev <- unlist(ifelse(sapply(tmp.elev,is.null),NA,tmp.elev))
 		})
+		#print("adding interp...")
 		plot.call$z.interp <- quote(tmp.elev)
-		plot.call$col.regions=quote(grey(seq(0.95,0.65,length=100)))
+		plot.call$col.regions <- quote(grey(seq(0.95,0.65,length=100)))
 	}
 	
 	if (!is.null(hsp$region)) {
@@ -386,9 +390,10 @@ updateTimePeriodPage <- function() {
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="site map", 
+	guiDo(playwith(plot.call=plot.call, name="site map", 
 		extra.buttons=hydrosanityButtons[c('setregion')],
-		eval.args="^tmp", restore.on.close=StateEnv$win), doLog=F)
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win),
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))

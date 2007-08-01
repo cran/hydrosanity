@@ -27,23 +27,27 @@ addToLog <- function(..., sep="", end.with="\n") {
 ## PLOTANDPLAYGTK CALLBACK FUNCTIONS
 
 hydrosanityButtons <- alist(
-	setregion=list("Set region", "gtk-yes", f=.hs_map_setregion_event),
-	setperiod=list("Set period", "gtk-yes", f=.hs_time_setperiod_event),
-	zoomin=list("Zoom in", "gtk-zoom-in", f=.hs_time_zoomin_event),
-	zoomout=list("Zoom out", "gtk-zoom-out", f=.hs_time_zoomout_event),
-	centre=list("Re-centre", "gtk-jump-to-ltr", f=.hs_time_centre_event),
-	logscale=list("Log scale", "gtk-goto-top", f=.hs_time_logscale_event, isToggle=T),
-	layers=list("Layers...", "gtk-index", f=.hs_layers_event)
+	setregion=quickTool("Set region", "gtk-yes", f=.hs_map_setregion_event),
+	setperiod=quickTool("Set period", "gtk-yes", f=.hs_time_setperiod_event),
+	zoomin=quickTool("Zoom in", "gtk-zoom-in", f=.hs_time_zoomin_event),
+	zoomout=quickTool("Zoom out", "gtk-zoom-out", f=.hs_time_zoomout_event),
+	centre=quickTool("Re-centre", "gtk-jump-to-ltr", f=.hs_time_centre_event),
+	logscale=quickTool("Log scale", "gtk-goto-top", f=.hs_time_logscale_event, isToggle=T),
+	layers=quickTool("Layers...", "gtk-index", f=.hs_layers_event)
 )
 
+as.POSIXct.numeric <- function(x) {
+	structure(as.numeric(x), class = c("POSIXt", "POSIXct"))
+}
+
 .hs_map_setregion_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# get current scale setting
-	myX <- eval(plotAndPlayGTK:::StateEnv[[name]]$call$xlim)
-	myY <- eval(plotAndPlayGTK:::StateEnv[[name]]$call$ylim)
+	myX <- eval(tmp.state$call$xlim, tmp.state$env)
+	myY <- eval(tmp.state$call$ylim, tmp.state$env)
 	addLogComment("Set region for analysis")
 	if (is.null(myX) || is.null(myY)) {
 		guiDo(hsp$region <- NULL)
@@ -57,16 +61,16 @@ hydrosanityButtons <- alist(
 			paste(myX, collapse=" to "), " Y=", paste(myY, collapse=" to "))
 	}
 	regionModificationUpdate()
-	plotAndPlayGTK:::StateEnv[[name]]$win$present()
+	tmp.state$win$present()
 }
 
 .hs_time_setperiod_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# get current scale setting
-	myXScale <- eval(plotAndPlayGTK:::StateEnv[[name]]$call$xscale)
+	myXScale <- eval(tmp.state$call$xscale, tmp.state$env)
 	addLogComment("Set time period for analysis")
 	if (is.null(myXScale)) {
 		guiDo(hsp$timePeriod <- NULL)
@@ -82,21 +86,17 @@ hydrosanityButtons <- alist(
 			paste(myTimeStrings, collapse=" to "))
 	}
 	timeperiodModificationUpdate()
-	plotAndPlayGTK:::StateEnv[[name]]$win$present()
+	tmp.state$win$present()
 }
 
 .hs_time_centre_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
-	# switch to this device
-	oldDev <- dev.cur()
-	dev.set(plotAndPlayGTK:::StateEnv[[name]]$dev)
-	on.exit(dev.set(oldDev), add=T)
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# set up prompt
-	plotAndPlayMakePrompt(name)
-	on.exit(plotAndPlayUnmakePrompt(name), add=T)
+	plotAndPlayMakePrompt()
+	on.exit(plotAndPlayUnmakePrompt(), add=T)
 	# get new scales interactively
 	depth <- try(downViewport("time.vp"), silent=T)
 	if (inherits(depth, "try-error")) {
@@ -105,7 +105,7 @@ hydrosanityButtons <- alist(
 	}
 	xscale <- as.numeric(convertX(unit(0:1, "npc"), "native"))
 	# get new centre point
-	plotAndPlaySetPrompt(name, "Click to re-centre the plot")
+	plotAndPlaySetPrompt("Click to re-centre the plot")
 	clickLoc <- grid.locator()
 	if (is.null(clickLoc)) {
 		upViewport(depth)
@@ -114,24 +114,19 @@ hydrosanityButtons <- alist(
 	xscale.new <- as.numeric(clickLoc$x) + diff(xscale) * c(-0.5, 0.5)
 	xscale.new <- as.POSIXct(xscale.new)
 	# update state
-	tmp.state <- plotAndPlayGTK:::StateEnv[[name]]
 	tmp.state$call$xscale <- xscale.new
-	assign(name, tmp.state, envir=plotAndPlayGTK:::StateEnv)
-	plotAndPlayUpdate(name)
+	plotAndPlaySetCurrState(tmp.state)
+	plotAndPlayUpdate()
 }
 
 .hs_time_zoomin_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
-	# switch to this device
-	oldDev <- dev.cur()
-	dev.set(plotAndPlayGTK:::StateEnv[[name]]$dev)
-	on.exit(dev.set(oldDev), add=T)
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# set up prompt
-	plotAndPlayMakePrompt(name)
-	on.exit(plotAndPlayUnmakePrompt(name), add=T)
+	plotAndPlayMakePrompt()
+	on.exit(plotAndPlayUnmakePrompt(), add=T)
 	# set up masking
 	maskGrob <- rectGrob(gp=gpar(col="grey", 
 		fill=rgb(0.5,0.5,0.5, alpha=0.5)), name="tmp.mask")
@@ -143,7 +138,7 @@ hydrosanityButtons <- alist(
 	}
 	xscale <- convertX(unit(0:1, "npc"), "native")
 	# get start time
-	plotAndPlaySetPrompt(name, "Click at the start of the window (to zoom in to)")
+	plotAndPlaySetPrompt("Click at the start of the window (to zoom in to)")
 	clickLoc <- grid.locator()
 	if (is.null(clickLoc)) {
 		upViewport(depth)
@@ -153,7 +148,7 @@ hydrosanityButtons <- alist(
 	grid.draw(editGrob(maskGrob, x=unit(0,"npc"), 
 		width=(clickLoc$x - xscale[1]), just="left"))
 	# get end time
-	plotAndPlaySetPrompt(name, "OK, now click at the end of the window")
+	plotAndPlaySetPrompt("OK, now click at the end of the window")
 	clickLoc <- grid.locator()
 	if (is.null(clickLoc)) {
 		grid.remove("tmp.mask", grep=T, global=T, strict=T)
@@ -164,21 +159,16 @@ hydrosanityButtons <- alist(
 	grid.draw(editGrob(maskGrob, x=unit(1,"npc"),
 		width=(xscale[2] - clickLoc$x), just="right"))
 	# update state
-	tmp.state <- plotAndPlayGTK:::StateEnv[[name]]
 	tmp.state$call$xscale <- xscale.new
-	assign(name, tmp.state, envir=plotAndPlayGTK:::StateEnv)
-	plotAndPlayUpdate(name)
+	plotAndPlaySetCurrState(tmp.state)
+	plotAndPlayUpdate()
 }
 
 .hs_time_zoomout_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
-	# switch to this device
-	oldDev <- dev.cur()
-	dev.set(plotAndPlayGTK:::StateEnv[[name]]$dev)
-	on.exit(dev.set(oldDev), add=T)
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# get new scales interactively
 	depth <- try(downViewport("time.vp"), silent=T)
 	if (inherits(depth, "try-error")) {
@@ -189,38 +179,35 @@ hydrosanityButtons <- alist(
 	xscale <- xscale + diff(xscale) * c(-0.5, 0.5)
 	xscale <- as.POSIXct(xscale)
 	# update state
-	tmp.state <- plotAndPlayGTK:::StateEnv[[name]]
 	tmp.state$call$xscale <- xscale
-	assign(name, tmp.state, envir=plotAndPlayGTK:::StateEnv)
-	plotAndPlayUpdate(name)
+	plotAndPlaySetCurrState(tmp.state)
+	plotAndPlayUpdate()
 }
 
 .hs_time_logscale_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# get new log scale setting
 	logScale <- widget$getActive()
 	# update state
-	tmp.state <- plotAndPlayGTK:::StateEnv[[name]]
 	tmp.state$call$logScale <- logScale
-	assign(name, tmp.state, envir=plotAndPlayGTK:::StateEnv)
-	plotAndPlayUpdate(name)
+	plotAndPlaySetCurrState(tmp.state)
+	plotAndPlayUpdate()
 }
 
 .hs_layers_event <- function(widget, user.data) {
-	name <- user.data$name
+	tmp.state <- plotAndPlayGetCurrState()
 	# disable other plot buttons until this is over
-	plotAndPlayGetToolbar(name)$setSensitive(F)
-	on.exit(plotAndPlayGetToolbar(name)$setSensitive(T))
+	plotAndPlayGetToolbar()$setSensitive(F)
+	on.exit(plotAndPlayGetToolbar()$setSensitive(T))
 	# show window with layer options
 	c("add.cities", "add.rivers", "z", "")
 	# update state
-	tmp.state <- plotAndPlayGTK:::StateEnv[[name]]
 	tmp.state$call$add.cities <- add.cities
-	assign(name, tmp.state, envir=plotAndPlayGTK:::StateEnv)
-	plotAndPlayUpdate(name)
+	plotAndPlaySetCurrState(tmp.state)
+	plotAndPlayUpdate()
 }
 
 

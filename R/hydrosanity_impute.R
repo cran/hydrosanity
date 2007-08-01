@@ -95,17 +95,94 @@ updateImputePage <- function() {
 	}))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="imputed vs actual", 
-		extra.buttons=plotAndPlayButtons[c('zero','logscale')],
-		trans.scales=c("x","y"),
-		labels=idLabels, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+	guiDo(playwith(plot.call=plot.call, name="imputed vs actual", 
+		extra.buttons=list("zero","logscale"),
+		trans.scales=c("x","y"), labels=idLabels, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
 	}
 	
 	setStatusBar("Generated imputed vs actual values scatterplot")
+}
+
+.hs_on_impute_missingatrandom_button_clicked <- function(button) {
+	StateEnv$win$setSensitive(F)
+	on.exit(StateEnv$win$setSensitive(T))
+	setStatusBar("")
+	
+	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
+	if (length(selNames) == 0) {
+		errorDialog("No items selected.")
+		return()
+	}
+	
+	doByDistance <- theWidget("impute_missing_distance_radiobutton")$getActive()
+	doByCorrelation <- theWidget("impute_missing_correlation_radiobutton")$getActive()
+	doByConstant <- theWidget("impute_missing_constant_radiobutton")$getActive()
+	imputeMethod <- c(
+		if (doByDistance) { "distance" },
+		if (doByCorrelation) { "correlation" },
+		if (doByConstant) { "constant" })
+	if (doByConstant) {
+		errorDialog("This does not make sense with method 'constant'.")
+		return()
+	}
+	
+	addLogComment("View distribtions of observed vs missing (imputed in gaps)")
+	
+	roles <- sapply(hsp$data, attr, "role")
+	if (length(unique(roles[selNames])) > 1) {
+		errorDialog("All selected items must have same role (e.g RAIN / FLOW).")
+		return()
+	}
+	
+	tmpObjs <- c("tmp.vars", "tmp.predictors")
+	sameRole <- (roles == roles[selNames[1]])
+	guiDo(call=bquote({
+		tmp.vars <- .(selNames)
+		tmp.predictors <- .(names(hsp$data)[sameRole])
+	}))
+	
+	impute.call <- call('impute.timeblobs')
+	impute.call[[2]] <- quote(hsp$data[tmp.predictors])
+	impute.call$which.impute <- quote(tmp.vars)
+	impute.call$timelim <- if (!is.null(hsp$timePeriod)) { quote(hsp$timePeriod) }
+	impute.call$extend <- T
+	impute.call$method <- imputeMethod
+	
+	impute.assign.call <- quote(tmp.data <- foo)
+	impute.assign.call[[3]] <- impute.call
+	
+	guiDo(call=impute.assign.call)
+	
+	guiDo(tmp.data <- lapply(tmp.data, function(x) {
+		x$is.observed <- factor(!is.na(x$Data), labels=c("missing", "not missing"))
+		#x$Data[is.na(x$Data)] <- x$Imputed[is.na(x$Data)]
+		x
+	}))
+	
+	# prepare data for plot
+	guiDo(tmp.groups <- do.call(make.groups, 
+		lapply(tmp.data, function(x) x$Imputed )))
+	guiDo(tmp.groups$is.observed <- unlist(lapply(tmp.data, function(x) x$is.observed )))
+	
+	#plot.call <- quote(bwplot(data ~ is.observed | which, tmp.groups))
+	plot.call <- quote(qqmath( ~ data | which, tmp.groups, groups=is.observed,
+		prepanel=prepanel.qqmath.fix))
+	
+	addToLog(paste(deparse(plot.call), collapse="\n"))
+	guiDo(playwith(plot.call=plot.call, name="distributions of observed vs missing", 
+		extra.buttons=list("zero","logscale"),
+		nav.scales=c("x", "y"), trans.scales=c("y"),
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
+	
+	if (length(tmpObjs) > 0) {
+		guiDo(call=bquote(rm(list=.(tmpObjs))))
+	}
 }
 
 .hs_on_impute_missing_button_clicked <- function(button, justDisaccumulate=F) {

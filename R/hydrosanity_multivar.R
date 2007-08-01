@@ -100,17 +100,86 @@ updateMultivarPage <- function() {
 		timestepTimeFormat(attr(tmp.data, "timestep")))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="rainfall-runoff", 
-		extra.buttons=plotAndPlayButtons[c('zero', 'logscale')],
-		trans.scales=c("x","y"),
-		labels=idLabels, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+	guiDo(playwith(plot.call=plot.call, name="rainfall-runoff", 
+		extra.buttons=list("zero", "logscale"),
+		trans.scales=c("x","y"), labels=idLabels, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
 	}
 	
 	setStatusBar("Generated multivariate rainfall-runoff relationship plot")
+}
+
+.hs_on_multivar_lagseries_button_clicked <- function(button) {
+	StateEnv$win$setSensitive(F)
+	on.exit(StateEnv$win$setSensitive(T))
+	setStatusBar("")
+	
+	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
+	if (length(selNames) == 0) {
+		errorDialog("No items selected.")
+		return()
+	}
+	nBlobs <- length(selNames)
+	doRises <- theWidget("multivar_corr_flowrises_checkbutton")$getActive()
+	flowName <- theWidget("multivar_flowblob_combobox")$getActiveText()
+	if (is.null(flowName)) {
+		errorDialog("No flow item was selected.")
+		return()
+	}
+	selNames <- c(flowName, selNames)
+	
+	tmpObjs <- c('tmp.data')
+	guiDo(call=bquote(
+		tmp.data <- hsp$data[.(selNames)]
+	))
+	
+	guiDo(call=bquote(
+		tmp.data <- sync.timeblobs(tmp.data, timelim=hsp$timePeriod)
+	))
+	
+	if (doRises) guiDo(tmp.data[[2]] <- rises(tmp.data[[2]]))
+	
+	tmpObjs <- c(tmpObjs, 'tmp.lags', 'tmp.chunks', 'tmp.win', 'tmp.ccf')
+	guiDo(tmp.lags <- numeric(0))
+	guiDo(call=bquote(
+		tmp.chunks <- seq(hsp$timePeriod[1], hsp$timePeriod[2], by="years")
+	))
+	for (i in seq_along(tmp.chunks)[-1]) {
+		guiDo(call=bquote({
+			tmp.win <- findIntervalPeriod(.(tmp.chunks[i-1]), 
+				.(tmp.chunks[i]), tmp.data$Time)
+			tmp.win <- seq(tmp.win[1], tmp.win[2])
+			tmp.ts <- try(na.contiguous(ts.intersect(as.ts(tmp.data[tmp.win,2]), 
+				as.ts(as.ts(tmp.data[tmp.win,3])))), silent=T)
+			if (inherits(tmp.ts, "try-error") || (nrow(tmp.ts) < 30)) {
+				tmp.lags[.(i)] <- NA
+			} else {
+				tmp.ccf <- ccf(tmp.ts[,1], tmp.ts[,2], plot=F)
+				tmp.ccf
+				tmp.lags[.(i)] <- tmp.ccf$lag[which.max(tmp.ccf$acf)]
+			}
+		}))
+	}
+	
+	plot.call <- quote(xyplot(tmp.lags ~ tmp.chunks, type="s", panel=function(...) {
+		panel.abline(h=0)
+		panel.xyplot(...)
+	}))
+	
+	addToLog(paste(deparse(plot.call), collapse="\n"))
+	guiDo(playwith(plot.call=plot.call, name="lag over time", 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
+	
+	if (length(tmpObjs) > 0) {
+		guiDo(call=bquote(rm(list=.(tmpObjs))))
+	}
+	
+	setStatusBar("Generated lag over time plot")
 }
 
 

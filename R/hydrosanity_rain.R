@@ -116,10 +116,11 @@ updateRainPage <- function() {
 	id.call$labels <- rownames(tmp.locs)
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="rainfall map", 
+	guiDo(playwith(plot.call=plot.call, name="rainfall map", 
 		extra.buttons=hydrosanityButtons[c('setregion')], 
-		identify.call=id.call, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+		identify.call=id.call, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))

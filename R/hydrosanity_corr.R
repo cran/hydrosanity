@@ -94,9 +94,10 @@ updateCorrPage <- function() {
 	plot.call$sub <- quote(tmp.caption)
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="cross-correlation", 
-		nav.scales="x", eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+	guiDo(playwith(plot.call=plot.call, name="cross-correlation", 
+		nav.scales="x", 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
@@ -258,11 +259,11 @@ updateCorrPage <- function() {
 		timestepTimeFormat(attr(tmp.data, "timestep")))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(plotAndPlay(plot.call=plot.call, name="rainfall-runoff", 
-		extra.buttons=plotAndPlayButtons[c('zero', 'logscale')],
-		trans.scales=c("x","y"),
-		labels=idLabels, eval.args="^tmp",
-		restore.on.close=StateEnv$win), doLog=F)
+	guiDo(playwith(plot.call=plot.call, name="rainfall-runoff", 
+		extra.buttons=list("zero", "logscale"),
+		trans.scales=c("x","y"), labels=idLabels, 
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))

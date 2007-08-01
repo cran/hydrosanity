@@ -218,7 +218,7 @@ grid.timeseries.plot.superpose <- function(superpose.blob.list, allSameScales=F,
 }
 
 
-grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales=T, logScale=F, qualTimeline=F, colMap=NULL, barThickness=unit(0.5,"lines"), auto.key=T, maxLabelChars=20, pad=unit(1,"lines"), between=unit(0,"lines"), superPos=1, newScale=T, main=NULL, sub=T, newpage=(superPos==1), nSuperpose=1, gp=gpar(col=trellis.par.get("superpose.line")$col[superPos], lty=trellis.par.get("superpose.line")$lty[superPos])) {
+grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales=T, logScale=F, qualTimeline=F, colMap=NULL, barThickness=unit(0.5,"lines"), auto.key=T, maxLabelChars=20, pad=unit(1,"lines"), between=unit(0,"lines"), superPos=1, newScale=T, main=NULL, sub=T, newpage=(superPos==1), nSuperpose=1, gp=gpar(col=rep(trellis.par.get("superpose.line")$col, len=superPos)[superPos], lty=rep(trellis.par.get("superpose.line")$lty, len=superPos)[superPos])) {
 	# check types
 	if (!identical(class(blob.list),"list")) { blob.list <- list(blob.list) }
 	if (any(sapply(blob.list, is.timeblob)==F)) { stop("'blob.list' must be a list of timeblobs") }
@@ -763,9 +763,9 @@ grid.xaxis.POSIXt <- function(lim=as.numeric(convertX(unit(c(0,1), "npc"), "nati
 
 
 # this panel function may be used in either xyplot or levelplot
-panel.geo <- function(x, y, z, z.interp, subscripts, 
+panel.geo <- function(x, y, z=NULL, z.interp, subscripts, 
 	layers=c("labels", "points", "surface", "catchment", "cities", "rivers", "countries"), 
-	points.xy=NULL, points.labels, catchment.poly, contour=F, region=T, at, col.contours=grey(0.5), 
+	points.xy=NULL, pch=19, points.labels, catchment.poly, contour=F, region=T, at, col.contours=grey(0.5), 
 	gp.labels=gpar(cex=0.7), gp.catchment=gpar(col="black"), gp.countries=gpar(col="black"), gp.cities=gpar(col="black", cex=0.7), pch.cities=15,
 	gp.rivers=gpar(col="blue", lty="longdash"), 
 	xo.length=64, yo.length=xo.length, linear=T, extrap=F, ...) {
@@ -883,7 +883,7 @@ panel.geo <- function(x, y, z, z.interp, subscripts,
 	}
 	# draw data points
 	if (any(c("points", "labels") %in% layers)) {
-		if (("surface" %in% layers) && missing(z.interp) && missing(points.xy)) {
+		if (("surface" %in% layers) && missing(z.interp) && !is.null(z) && missing(points.xy)) {
 			# x and y are a grid of points (for levelplot)
 			# and points.xy not given; so don't have points
 			return()
@@ -903,7 +903,7 @@ panel.geo <- function(x, y, z, z.interp, subscripts,
 		uy <- unit(myY, "native")
 		if ("points" %in% layers) {
 			#panel.xyplot(myX, myY, ...)
-			panel.points(myX, myY)
+			panel.points(myX, myY, pch=pch)
 		}
 		if (("labels" %in% layers) && !missing(points.labels)) {
 			if (length(points.labels) > length(subscripts)) {
