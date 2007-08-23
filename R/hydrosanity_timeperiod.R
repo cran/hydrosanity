@@ -54,11 +54,9 @@ updateTimePeriodPage <- function() {
 	}
 }
 
-
 .hs_on_scope_viewdbsitemap_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	siteListFile <- theWidget("scope_sitelist_filechooserbutton")$getFilename()
 	siteListFormatIndex <- theWidget("scope_sitelist_format_combobox")$getActive()+1
@@ -82,28 +80,33 @@ updateTimePeriodPage <- function() {
 	
 	guiDo(call=select.assign.call)
 	
-	plot.call <- call('xyplot')
-	plot.call[[2]] <- quote(y ~ x)
-	plot.call[[3]] <- quote(tmp.sites)
-	plot.call$pch <- quote(ifelse(tmp.sites$ok, 19, 21))
-	plot.call$aspect <- "iso"
+	plot.call <- quote(
+		xyplot(y ~ x, tmp.sites, aspect="iso", pch=ifelse(tmp.sites$ok, 19, 21))
+	)
 	
-	plot.call$panel <- quote(panel.geo)
-	
-	if (doInterpElev) {
-		plot.call$z.interp <- quote(tmp.sites$elev)
-		plot.call$col.regions=quote(grey(seq(0.95,0.65,length=100)))
+	plot.call$panel <- function(x, y, z, labels, ...) {
+		panel.interp(x, y, z, col.regions=grey(seq(0.95,0.65,length=100)))
+		panel.worldmap()
+		panel.rivers()
+		panel.cities()
+		if (!is.null(hsp$catchment))
+			sp.polygons(hsp$catchment)
+		panel.points(x, y)
+		quote(panel.text(x, y, labels=labels, ...))
 	}
+	
+	# turn layer off by wrapping it in quote()
+	if (!doInterpElev) body(plot.call$panel)[[2]] <- 
+		call('quote', body(plot.call$panel)[[2]])
+	
+	plot.call$z <- quote(tmp.sites$elev)
+	plot.call$labels <- quote(row.names(tmp.sites))
 	
 	if (!is.null(hsp$region)) {
 		plot.call$xlim <- quote(hsp$region$xlim)
 		plot.call$ylim <- quote(hsp$region$ylim)
 	} else {
 		plot.call$prepanel <- quote(prepanel.extend.10)
-	}
-	
-	if (!is.null(hsp$catchment)) {
-		plot.call$catchment.poly <- quote(hsp$catchment)
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
@@ -118,9 +121,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_viewdbtimeline_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	siteListFile <- theWidget("scope_sitelist_filechooserbutton")$getFilename()
 	siteListFormatIndex <- theWidget("scope_sitelist_format_combobox")$getActive()+1
@@ -169,9 +171,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_import_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	siteListFile <- theWidget("scope_sitelist_filechooserbutton")$getFilename()
 	siteListFormatIndex <- theWidget("scope_sitelist_format_combobox")$getActive()+1
@@ -224,9 +225,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_timeperiod_updateperiod_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	myText <- theWidget("timeperiod_chosenperiod_entry")$getText()
 	myTimeStrings <- strsplit(myText, " to ")[[1]]
@@ -244,9 +244,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_timeperiod_reset_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	addToLog("\n")
 	guiDo(hsp$timePeriod <- NULL)
@@ -255,9 +254,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_set_region_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	myXText <- theWidget("scope_region_x_entry")$getText()
 	myYText <- theWidget("scope_region_y_entry")$getText()
@@ -280,9 +278,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_reset_region_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	addToLog("\n")
 	guiDo(hsp$region <- NULL)
@@ -292,9 +289,8 @@ updateTimePeriodPage <- function() {
 
 
 .hs_on_timeperiod_viewtimeline_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -322,9 +318,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_viewsitemap_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	doInterpElev <- theWidget("scope_sitemap_elevation_checkbutton")$getActive()
 	doRainOnly <- theWidget("scope_sitemap_rainonly_checkbutton")$getActive()
@@ -362,10 +357,25 @@ updateTimePeriodPage <- function() {
 	}))
 	
 	plot.call <- quote(
-		xyplot(y ~ x, tmp.locs, aspect="iso", points.labels=rownames(tmp.locs))
+		xyplot(y ~ x, tmp.locs, aspect="iso")
 	)
 	
-	plot.call$panel <- quote(panel.geo)
+	plot.call$panel <- function(x, y, z, labels, ...) {
+		panel.levelplot.interp(x, y, z, col.regions=rev(grey.colors(100)))#grey(seq(0.95,0.65,length=100)))
+		panel.worldmap()
+		panel.rivers()
+		panel.cities()
+		if (!is.null(hsp$catchment))
+			sp.polygons(hsp$catchment)
+		panel.points(x, y)
+		panel.text(x, y, labels=labels, ...)
+	}
+	
+	# turn layer off by wrapping it in `if (FALSE)`
+	if (!doInterpElev) body(plot.call$panel)[[2]] <- 
+		call('if', FALSE, body(plot.call$panel)[[2]])
+	
+	plot.call$labels <- quote(row.names(tmp.locs))
 	
 	if (doInterpElev) {
 		tmpObjs <- c(tmpObjs, 'tmp.elev')
@@ -373,20 +383,17 @@ updateTimePeriodPage <- function() {
 			tmp.elev <- lapply(hsp$data[tmp.names], attr, "elevation")
 			tmp.elev <- unlist(ifelse(sapply(tmp.elev,is.null),NA,tmp.elev))
 		})
-		#print("adding interp...")
-		plot.call$z.interp <- quote(tmp.elev)
-		plot.call$col.regions <- quote(grey(seq(0.95,0.65,length=100)))
+		stopifnot(exists("tmp.elev"))
+		plot.call$z <- quote(tmp.elev)
 	}
+	
+	if (!doInterpElev) plot.call$z <- NULL
 	
 	if (!is.null(hsp$region)) {
 		plot.call$xlim <- quote(hsp$region$xlim)
 		plot.call$ylim <- quote(hsp$region$ylim)
 	} else {
 		plot.call$prepanel <- quote(prepanel.extend.10)
-	}
-	
-	if (!is.null(hsp$catchment)) {
-		plot.call$catchment.poly <- quote(hsp$catchment)
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
@@ -403,9 +410,8 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_import_catchment_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	shapeFile <- theWidget("scope_catchment_filechooserbutton")$getFilename()
 	fileFormatIndex <- theWidget("scope_catchment_format_combobox")$getActive()+1
@@ -417,8 +423,7 @@ updateTimePeriodPage <- function() {
 	
 	addLogComment("Import catchment boundaries from file")
 	
-	select.call <- call(CATCHMENT.FORMATS[[fileFormatIndex]])
-	select.call$file <- shapeFile
+	select.call <- call(CATCHMENT.FORMATS[[fileFormatIndex]], shapeFile)
 	
 	select.assign.call <- quote(hsp$catchment <- foo)
 	select.assign.call[[3]] <- select.call
@@ -431,6 +436,7 @@ updateTimePeriodPage <- function() {
 ## NON-ACTIONS, just interface bits and pieces
 
 .hs_on_scope_yearstart_combobox_changed <- function(widget) {
+	StateEnv$use.core.log <- T
 	addToLog("\n")
 	guiDo(call=bquote(hsp$yearStart <- .(widget$getActive()+1)))
 }

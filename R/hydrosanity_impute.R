@@ -8,9 +8,8 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_view_error_scatter_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -68,7 +67,7 @@ updateImputePage <- function() {
 	if (doAggr1 || doAggr2) {
 		aggrBy <- if (doAggr1) { aggr1By } else { aggr2By }
 		aggr.call <- bquote(
-			tmp.data <- lapply(tmp.data, aggregate.timeblob, by=.(aggrBy))
+			tmp.data <- lapply(tmp.data, aggregate.timeblob, by=.(aggrBy), fun.qual="omit")
 		)
 		if (any(grep("( month|year)", aggrBy))) {
 			aggr.call[[3]]$start.month <- hsp$startMonth
@@ -109,9 +108,8 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_missingatrandom_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -186,9 +184,8 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_missing_button_clicked <- function(button, justDisaccumulate=F) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -252,9 +249,8 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_undo_imputed_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -275,9 +271,8 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_undo_accumulated_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -298,9 +293,8 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_calculate_gaps_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	TXV <- theWidget("impute_textview")
 	setTextview(TXV, "")

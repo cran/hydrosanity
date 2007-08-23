@@ -2,30 +2,34 @@
 ##
 ## Copyright (c) 2007 Felix Andrews <felix@nfrac.org>, GPL
 
-.hs_on_menu_new_activate <- function(action, window) {hydrosanity()}
-.hs_on_menu_open_activate <- function(action, window) {openProject()}
-.hs_on_menu_save_activate <- function(action, window) {saveProject()}
-.hs_on_menu_saveas_activate <- function(action, window) {saveProject(saveAs=T)}
+.hs_on_menu_new_activate <- function(action, window) hydrosanity()
+.hs_on_menu_open_activate <- function(action, window) openProject()
+.hs_on_menu_save_activate <- function(action, window) saveProject()
+.hs_on_menu_saveas_activate <- function(action, window) saveProject(saveAs=T)
 
 openProject <- function() {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	ff <- c("Hydrosanity projects (.hydrosanity)", "*.hydrosanity")
 	filename <- choose.files(caption="Open project", filters=ff, multi=F)
 	StateEnv$win$present()
-	if (filename=="") { return() }
+	if (filename=="") return()
 	
 	hydrosanity()
 	StateEnv$win$setSensitive(F)
 	load(filename, .GlobalEnv)
-	hsp$projectFile <<- filename
 	hsp$modified <<- F
+	hsp$projectFile <<- filename
+	StateEnv$win['title'] <- paste("Hydrosanity:", get.stem(filename))
 	
 	setTextview(theWidget("log_textview"), hsp$log)
+	if (is.null(hsp$core_log))
+		hsp$core_log <<- "== Project was saved without a core log. ==\n\n"
+	setTextview(theWidget("core_log_textview"), hsp$core_log)
 	addLogSeparator()
 	hsp$log <<- NULL
+	hsp$core_log <<- NULL
 	
 	if (is.null(hsp$version) ||
 		package_version(hsp$version) < package_version("0.5")) {
@@ -77,18 +81,17 @@ openProject <- function() {
 }
 
 saveProject <- function(saveAs=F) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI()
+	on.exit(thawGUI())
 	
 	ff <- c("Hydrosanity projects (.hydrosanity)", "*.hydrosanity")
 	filename <- hsp$projectFile
-	if (is.null(filename)) { filename <- "" }
+	if (is.null(filename)) filename <- ""
 	if (saveAs==T || filename=="") {
 		filename <- choose.file.save(filename, caption="Save project",
 			filters=ff)
 		StateEnv$win$present()
-		if (is.na(filename)) { return() }
+		if (is.na(filename)) return()
 	}
 	
 	if (get.extension(filename) != "hydrosanity") {
@@ -96,12 +99,15 @@ saveProject <- function(saveAs=F) {
 	}
 	
 	hsp$log <<- getTextviewText(theWidget("log_textview"))
+	hsp$core_log <<- getTextviewText(theWidget("core_log_textview"))
 	hsp$version <<- VERSION
 	save(hsp, file=filename, compress=TRUE)
 	hsp$log <<- NULL
+	hsp$core_log <<- NULL
 	hsp$version <<- NULL
-	hsp$projectFile <<- filename
 	hsp$modified <<- F
+	hsp$projectFile <<- filename
+	StateEnv$win['title'] <- paste("Hydrosanity:", get.stem(filename))
 	
 	setStatusBar("Project saved to ", dQuote(filename))
 }

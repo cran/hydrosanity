@@ -7,10 +7,22 @@ import(utils)
 ## hydrosanity.R
 export(
 	hydrosanity,
-	select.sites.BOM.AU,
-	read.catchment.esri_shapefile
+	select.sites.BOM.AU
 )
 
+## spatial_functions.R
+export(
+	panel.levelplot.interp,
+	panel.contourplot.interp,
+	panel.worldmap,
+	panel.rivers,
+	panel.cities,
+	prepanel.extend.10,
+	sqrtPalette,
+	sqrtPretty,
+	arealSubPolygons
+)
+	
 ## timeblob_plots.R
 export(
 	grid.timeline.plot,
@@ -25,10 +37,6 @@ export(
 	lattice.y.prettylog,
 	lattice.x.prettylog,
 	grid.xaxis.POSIXt,
-	panel.geo,
-	panel.interp,
-	panel.map,
-	prepanel.extend.10,
 	prepanel.qqmath.fix
 )
 
@@ -60,7 +68,7 @@ export(
 	impute.timeblobs,
 	imputeGaps.timeblobs,
 	unimputeGaps.timeblobs,
-	spaceTimeField,
+	waterQuarters,
 	gaps,
 	expand.indices,
 	rises,

@@ -20,8 +20,17 @@ addLogComment <- function(...) {
 	addToLog("\n## ", ...)
 }
 
-addToLog <- function(..., sep="", end.with="\n") {
+addToFullLog <- function(..., sep="", end.with="\n") {
 	addTextview(theWidget("log_textview"), ..., end.with, sep=sep)
+}
+
+addToCoreLog <- function(..., sep="", end.with="\n") {
+	addTextview(theWidget("core_log_textview"), ..., end.with, sep=sep)
+}
+
+addToLog <- function(...) {
+	addToFullLog(...)
+	if (isTRUE(StateEnv$use.core.log)) addToCoreLog(...)
 }
 
 ## PLOTANDPLAYGTK CALLBACK FUNCTIONS
@@ -318,6 +327,19 @@ iconViewGetSelectedNames <- function(iconView) {
 
 ## Misc
 
+freezeGUI <- function(use.core.log=T) {
+	StateEnv$win$setSensitive(F)
+	StateEnv$win$getWindow()$setCursor(gdkCursorNew("watch"))
+	StateEnv$use.core.log <- use.core.log
+	setStatusBar("")
+	#theWidget("statusbar")$pop(1)
+}
+
+thawGUI <- function() {
+	StateEnv$win$setSensitive(T)
+	StateEnv$win$getWindow()$setCursor(NULL)
+}
+
 setStatusBar <- function(..., sep="")
 {
   msg <- paste(sep=sep, ...)
@@ -326,10 +348,4 @@ setStatusBar <- function(..., sep="")
   while (gtkEventsPending()) gtkMainIteration() # Refresh status and windows
   invisible(NULL)
 }
-
-setCursor <- function(cursor=NULL) {
-	if (!is.null(cursor)) { cursor <- gdkCursorNew(cursor) }
-	StateEnv$win$getWindow()$setCursor(cursor)
-}
-
 

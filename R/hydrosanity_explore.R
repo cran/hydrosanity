@@ -8,9 +8,8 @@ updateExplorePage <- function() {
 }
 
 .hs_on_explore_timeseries_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -175,9 +174,8 @@ updateExplorePage <- function() {
 }
 
 .hs_on_explore_cdf_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -188,7 +186,6 @@ updateExplorePage <- function() {
 	doNormal <- theWidget("explore_cdf_normal_radiobutton")$getActive()
 	doUniform <- theWidget("explore_cdf_uniform_radiobutton")$getActive()
 	doCDF <- doNormal || doUniform
-	doLine <- theWidget("explore_cdf_line_checkbutton")$getActive()
 	doBoxPlot <- theWidget("explore_cdf_bwplot_radiobutton")$getActive()
 	doStripPlot <- theWidget("explore_cdf_stripplot_radiobutton")$getActive()
 	doViolinPlot <- theWidget("explore_cdf_violinplot_radiobutton")$getActive()
@@ -219,7 +216,7 @@ updateExplorePage <- function() {
 	
 	# compute and store aggregated series
 	if (doAggr1 || doAggr2) {
-		aggrBy <- if (doAggr1) { aggr1By } else { aggr2By }
+		aggrBy <- if (doAggr1) aggr1By else aggr2By
 		aggr.call <- bquote(
 			tmp.data <- lapply(tmp.data, aggregate.timeblob, by=.(aggrBy))
 		)
@@ -231,7 +228,7 @@ updateExplorePage <- function() {
 	
 	# make.groups
 	tmpObjs <- c(tmpObjs, 'tmp.groups')
-	guiDo(sprintf(
+	guiDo(string=sprintf(
 		'tmp.groups <- make.groups(%s)',
 		paste(sep='', collapse=', ',
 			make.names(names(tmp.data)), 
@@ -241,17 +238,17 @@ updateExplorePage <- function() {
 	#	lapply(tmp.data, function(x) x$Data )))
 	
 	# plot specifications
-	plotFn <- if (doCDF) { 'qqmath' } else 
-		if (doStripPlot) { 'stripplot' } else { 'bwplot' }
+	plotFn <- if (doCDF) 'qqmath' else 
+		if (doStripPlot) 'stripplot' else 'bwplot'
 	plot.call <- call(plotFn)
-	plot.call[[2]] <- if (doCDF) { quote(~ data) } else { quote(data ~ which) }
-	plot.call$groups <- if (doCDF) { quote(which) }
+	plot.call[[2]] <- if (doCDF) quote(~ data) else quote(data ~ which)
+	plot.call$groups <- if (doCDF) quote(which)
 	plot.call$data <- quote(tmp.groups)
-	plot.call$distribution <- if (doNormal) { quote(qnorm) } else
-		if (doUniform) { quote(qunif) }
-	plot.call$panel <- if (doCDF && doLine) {
+	plot.call$distribution <- if (doNormal) quote(qnorm) else
+		if (doUniform) quote(qunif)
+	plot.call$panel <- if (doCDF) {
 			function(x, ...) {
-				panel.qqmathline(x[is.finite(x)], ...)
+				if (FALSE) panel.qqmathline(x[is.finite(x)], ...)
 				panel.qqmath(x, ...)
 			}
 		} else if (doViolinPlot) {
@@ -265,17 +262,18 @@ updateExplorePage <- function() {
 	# plot scales and annotation specifications
 	if (doCDF) {
 		tmpObjs <- c(tmpObjs, 'tmp.probs')
+		plot.call$scales <- quote(list())
 		if (doNormal) {
 			guiDo(tmp.probs <- c(0.001, 0.01, 0.1, 0.25, 0.5, 
 				0.75, 0.9, 0.99, 0.999))
 			plot.call$scales$x <- quote(list(
-				at=qnorm(tmp.probs), labels=tmp.probs * 100))
-			plot.call$xlim <- quote(qnorm(c(0.999, 0.001)))
+				at=qnorm(1-tmp.probs), labels=tmp.probs * 100))
+			plot.call$xlim <- quote(rev(extendrange(qnorm(tmp.probs))))
 		} else {
 			guiDo(tmp.probs <- seq(0, 1, by=0.1))
 			plot.call$scales$x <- quote(list(
-				at=tmp.probs, labels=tmp.probs * 100))
-			plot.call$xlim <- quote(1:0)
+				at=(1-tmp.probs), labels=tmp.probs * 100))
+			plot.call$xlim <- quote(rev(extendrange(tmp.probs)))
 		}
 	}
 	plot.call$yscale.components <- quote(lattice.y.prettylog)
@@ -313,9 +311,8 @@ updateExplorePage <- function() {
 }
 
 .hs_on_explore_seasonal_button_clicked <- function(button) {
-	StateEnv$win$setSensitive(F)
-	on.exit(StateEnv$win$setSensitive(T))
-	setStatusBar("")
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
 	if (length(selNames) == 0) {
@@ -378,18 +375,18 @@ updateExplorePage <- function() {
 	plot.call$panel <- if (doDrawLine && !doSupStripPlot) {
 		if (doStripPlot) {
 			function(...) {
-				panel.linejoin(..., fun=function(x){mean(x, na.rm=T)})
+				panel.linejoin(..., fun=function(x)mean(x, na.rm=T))
 				panel.stripplot(...)
 			}
 		} else if (doViolinPlot) {
 			function(...) {
-				panel.linejoin(..., fun=function(x){mean(x, na.rm=T)})
+				panel.linejoin(..., fun=function(x)mean(x, na.rm=T))
 				panel.violin(varwidth=T, ...)
 				panel.stripplot(pch=3, ...)
 			}
 		} else {
 			function(...) {
-				panel.linejoin(..., fun=function(x){mean(x, na.rm=T)})
+				panel.linejoin(..., fun=function(x)mean(x, na.rm=T))
 				panel.bwplot(...)
 			}
 		}

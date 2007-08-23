@@ -1,11 +1,9 @@
 \name{hydrosanity-internal}
-\alias{addToLog}
+\alias{waterQuarters}
+\alias{sqrtPalette}
+\alias{sqrtPretty}
 \alias{select.sites.BOM.AU}
-\alias{read.catchment.esri_shapefile}
-\alias{panel.geo}
-\alias{panel.interp}
-\alias{panel.map}
-\alias{prepanel.extend.10}
+\alias{addToLog}
 \alias{prepanel.qqmath.fix}
 \title{Internal Hydrosanity functions}
 \description{Ignore these.}
