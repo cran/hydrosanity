@@ -1413,7 +1413,7 @@ The GNU General Public License is available at http://www.gnu.org/copyleft/gpl.h
 			<widget class="GtkExpander" id="import_edit_expander">
 			  <property name="visible">True</property>
 			  <property name="can_focus">True</property>
-			  <property name="expanded">True</property>
+			  <property name="expanded">False</property>
 			  <property name="spacing">0</property>
 			  <signal name="activate" handler=".hs_on_dataset_expanders_activate" last_modification_time="Thu, 05 Jul 2007 07:35:33 GMT"/>
 
@@ -2272,7 +2272,7 @@ omit</property>
 			<widget class="GtkExpander" id="import_export_expander">
 			  <property name="visible">True</property>
 			  <property name="can_focus">True</property>
-			  <property name="expanded">False</property>
+			  <property name="expanded">True</property>
 			  <property name="spacing">0</property>
 			  <signal name="activate" handler=".hs_on_dataset_expanders_activate" last_modification_time="Thu, 05 Jul 2007 07:35:47 GMT"/>
 
@@ -7419,6 +7419,74 @@ extend</property>
 		  <property name="spacing">0</property>
 
 		  <child>
+		    <widget class="GtkExpander" id="expander6">
+		      <property name="can_focus">True</property>
+		      <property name="expanded">True</property>
+		      <property name="spacing">0</property>
+
+		      <child>
+			<widget class="GtkScrolledWindow" id="scrolledwindow22">
+			  <property name="visible">True</property>
+			  <property name="can_focus">True</property>
+			  <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+			  <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+			  <property name="shadow_type">GTK_SHADOW_IN</property>
+			  <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
+
+			  <child>
+			    <widget class="GtkTextView" id="textview4">
+			      <property name="visible">True</property>
+			      <property name="can_focus">True</property>
+			      <property name="editable">False</property>
+			      <property name="overwrite">False</property>
+			      <property name="accepts_tab">True</property>
+			      <property name="justification">GTK_JUSTIFY_LEFT</property>
+			      <property name="wrap_mode">GTK_WRAP_WORD</property>
+			      <property name="cursor_visible">True</property>
+			      <property name="pixels_above_lines">0</property>
+			      <property name="pixels_below_lines">0</property>
+			      <property name="pixels_inside_wrap">0</property>
+			      <property name="left_margin">0</property>
+			      <property name="right_margin">0</property>
+			      <property name="indent">0</property>
+			      <property name="text" translatable="yes">TODO
+Use &quot;Interpolated rainfall&quot; to view multiple rainfall time series on a map.</property>
+			    </widget>
+			  </child>
+			</widget>
+		      </child>
+
+		      <child>
+			<widget class="GtkLabel" id="label252">
+			  <property name="visible">True</property>
+			  <property name="label" translatable="yes">&lt;b&gt;Help&lt;/b&gt;</property>
+			  <property name="use_underline">False</property>
+			  <property name="use_markup">True</property>
+			  <property name="justify">GTK_JUSTIFY_LEFT</property>
+			  <property name="wrap">False</property>
+			  <property name="selectable">False</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+			  <property name="width_chars">-1</property>
+			  <property name="single_line_mode">False</property>
+			  <property name="angle">0</property>
+			</widget>
+			<packing>
+			  <property name="type">label_item</property>
+			</packing>
+		      </child>
+		    </widget>
+		    <packing>
+		      <property name="padding">0</property>
+		      <property name="expand">False</property>
+		      <property name="fill">True</property>
+		    </packing>
+		  </child>
+
+		  <child>
 		    <widget class="GtkFrame" id="frame32">
 		      <property name="visible">True</property>
 		      <property name="label_xalign">0</property>
@@ -7495,7 +7563,7 @@ extend</property>
 					      <child>
 						<widget class="GtkLabel" id="label150">
 						  <property name="visible">True</property>
-						  <property name="label" translatable="yes">&lt;b&gt;Rainfall map&lt;/b&gt;</property>
+						  <property name="label" translatable="yes">&lt;b&gt;Interpolated rainfall&lt;/b&gt;</property>
 						  <property name="use_underline">True</property>
 						  <property name="use_markup">True</property>
 						  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7542,16 +7610,16 @@ extend</property>
 				  <property name="spacing">0</property>
 
 				  <child>
-				    <widget class="GtkHBox" id="hbox104">
+				    <widget class="GtkHBox" id="hbox155">
 				      <property name="visible">True</property>
 				      <property name="homogeneous">False</property>
 				      <property name="spacing">0</property>
 
 				      <child>
-					<widget class="GtkRadioButton" id="rain_surface_overall_radiobutton">
+					<widget class="GtkRadioButton" id="rain_surface_raw_radiobutton">
 					  <property name="visible">True</property>
 					  <property name="can_focus">True</property>
-					  <property name="label" translatable="yes">Overall average rainfall</property>
+					  <property name="label" translatable="yes">Raw data (time series)</property>
 					  <property name="use_underline">True</property>
 					  <property name="relief">GTK_RELIEF_NORMAL</property>
 					  <property name="focus_on_click">True</property>
@@ -7565,6 +7633,26 @@ extend</property>
 					  <property name="fill">False</property>
 					</packing>
 				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">False</property>
+				      <property name="fill">False</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkRadioButton" id="rain_surface_annual_radiobutton">
+				      <property name="visible">True</property>
+				      <property name="can_focus">True</property>
+				      <property name="label" translatable="yes">Annual rainfall anomalies</property>
+				      <property name="use_underline">True</property>
+				      <property name="relief">GTK_RELIEF_NORMAL</property>
+				      <property name="focus_on_click">True</property>
+				      <property name="active">False</property>
+				      <property name="inconsistent">False</property>
+				      <property name="draw_indicator">True</property>
+				      <property name="group">rain_surface_raw_radiobutton</property>
 				    </widget>
 				    <packing>
 				      <property name="padding">0</property>
@@ -7590,7 +7678,7 @@ extend</property>
 					  <property name="active">False</property>
 					  <property name="inconsistent">False</property>
 					  <property name="draw_indicator">True</property>
-					  <property name="group">rain_surface_overall_radiobutton</property>
+					  <property name="group">rain_surface_raw_radiobutton</property>
 					</widget>
 					<packing>
 					  <property name="padding">0</property>
@@ -7610,73 +7698,7 @@ extend</property>
 					  <property name="active">False</property>
 					  <property name="inconsistent">False</property>
 					  <property name="draw_indicator">True</property>
-					  <property name="group">rain_surface_overall_radiobutton</property>
-					</widget>
-					<packing>
-					  <property name="padding">0</property>
-					  <property name="expand">False</property>
-					  <property name="fill">False</property>
-					</packing>
-				      </child>
-				    </widget>
-				    <packing>
-				      <property name="padding">0</property>
-				      <property name="expand">False</property>
-				      <property name="fill">False</property>
-				    </packing>
-				  </child>
-
-				  <child>
-				    <widget class="GtkHBox" id="hbox109">
-				      <property name="visible">True</property>
-				      <property name="homogeneous">False</property>
-				      <property name="spacing">0</property>
-
-				      <child>
-					<widget class="GtkRadioButton" id="rain_surface_annual_radiobutton">
-					  <property name="visible">True</property>
-					  <property name="can_focus">True</property>
-					  <property name="label" translatable="yes">Annual rainfall anomalies</property>
-					  <property name="use_underline">True</property>
-					  <property name="relief">GTK_RELIEF_NORMAL</property>
-					  <property name="focus_on_click">True</property>
-					  <property name="active">False</property>
-					  <property name="inconsistent">False</property>
-					  <property name="draw_indicator">True</property>
-					  <property name="group">rain_surface_overall_radiobutton</property>
-					</widget>
-					<packing>
-					  <property name="padding">0</property>
-					  <property name="expand">False</property>
-					  <property name="fill">False</property>
-					</packing>
-				      </child>
-				    </widget>
-				    <packing>
-				      <property name="padding">0</property>
-				      <property name="expand">False</property>
-				      <property name="fill">False</property>
-				    </packing>
-				  </child>
-
-				  <child>
-				    <widget class="GtkHBox" id="hbox155">
-				      <property name="visible">True</property>
-				      <property name="homogeneous">False</property>
-				      <property name="spacing">0</property>
-
-				      <child>
-					<widget class="GtkRadioButton" id="rain_surface_raw_radiobutton">
-					  <property name="visible">True</property>
-					  <property name="can_focus">True</property>
-					  <property name="label" translatable="yes">Raw data (time series)</property>
-					  <property name="use_underline">True</property>
-					  <property name="relief">GTK_RELIEF_NORMAL</property>
-					  <property name="focus_on_click">True</property>
-					  <property name="active">False</property>
-					  <property name="inconsistent">False</property>
-					  <property name="draw_indicator">True</property>
-					  <property name="group">rain_surface_overall_radiobutton</property>
+					  <property name="group">rain_surface_raw_radiobutton</property>
 					</widget>
 					<packing>
 					  <property name="padding">0</property>
@@ -7689,6 +7711,39 @@ extend</property>
 				      <property name="padding">0</property>
 				      <property name="expand">True</property>
 				      <property name="fill">True</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkHBox" id="hbox109">
+				      <property name="visible">True</property>
+				      <property name="homogeneous">False</property>
+				      <property name="spacing">0</property>
+
+				      <child>
+					<widget class="GtkRadioButton" id="rain_surface_overall_radiobutton">
+					  <property name="visible">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="label" translatable="yes">Overall average rainfall</property>
+					  <property name="use_underline">True</property>
+					  <property name="relief">GTK_RELIEF_NORMAL</property>
+					  <property name="focus_on_click">True</property>
+					  <property name="active">False</property>
+					  <property name="inconsistent">False</property>
+					  <property name="draw_indicator">True</property>
+					  <property name="group">rain_surface_raw_radiobutton</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">False</property>
+				      <property name="fill">False</property>
 				    </packing>
 				  </child>
 
@@ -7789,7 +7844,463 @@ extend</property>
 		      <child>
 			<widget class="GtkLabel" id="label157">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">&lt;b&gt;Spatial pattern of rainfall&lt;/b&gt;</property>
+			  <property name="label" translatable="yes">&lt;b&gt;Interpolated rainfall&lt;/b&gt;</property>
+			  <property name="use_underline">False</property>
+			  <property name="use_markup">True</property>
+			  <property name="justify">GTK_JUSTIFY_LEFT</property>
+			  <property name="wrap">False</property>
+			  <property name="selectable">False</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xpad">0</property>
+			  <property name="ypad">0</property>
+			  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+			  <property name="width_chars">-1</property>
+			  <property name="single_line_mode">False</property>
+			  <property name="angle">0</property>
+			</widget>
+			<packing>
+			  <property name="type">label_item</property>
+			</packing>
+		      </child>
+		    </widget>
+		    <packing>
+		      <property name="padding">0</property>
+		      <property name="expand">False</property>
+		      <property name="fill">True</property>
+		    </packing>
+		  </child>
+
+		  <child>
+		    <widget class="GtkFrame" id="frame41">
+		      <property name="visible">True</property>
+		      <property name="label_xalign">0</property>
+		      <property name="label_yalign">0.5</property>
+		      <property name="shadow_type">GTK_SHADOW_ETCHED_IN</property>
+
+		      <child>
+			<widget class="GtkAlignment" id="alignment69">
+			  <property name="visible">True</property>
+			  <property name="xalign">0.5</property>
+			  <property name="yalign">0.5</property>
+			  <property name="xscale">1</property>
+			  <property name="yscale">1</property>
+			  <property name="top_padding">0</property>
+			  <property name="bottom_padding">0</property>
+			  <property name="left_padding">12</property>
+			  <property name="right_padding">0</property>
+
+			  <child>
+			    <widget class="GtkHBox" id="hbox156">
+			      <property name="visible">True</property>
+			      <property name="homogeneous">False</property>
+			      <property name="spacing">0</property>
+
+			      <child>
+				<widget class="GtkVBox" id="vbox70">
+				  <property name="visible">True</property>
+				  <property name="homogeneous">False</property>
+				  <property name="spacing">0</property>
+
+				  <child>
+				    <widget class="GtkButton" id="rain_view_grids_button">
+				      <property name="visible">True</property>
+				      <property name="can_focus">True</property>
+				      <property name="relief">GTK_RELIEF_NORMAL</property>
+				      <property name="focus_on_click">True</property>
+				      <signal name="clicked" handler=".hs_on_rain_view_grids_button_clicked" last_modification_time="Fri, 31 Aug 2007 09:02:46 GMT"/>
+
+				      <child>
+					<widget class="GtkAlignment" id="alignment70">
+					  <property name="visible">True</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xscale">0</property>
+					  <property name="yscale">0</property>
+					  <property name="top_padding">0</property>
+					  <property name="bottom_padding">0</property>
+					  <property name="left_padding">0</property>
+					  <property name="right_padding">0</property>
+
+					  <child>
+					    <widget class="GtkHBox" id="hbox157">
+					      <property name="visible">True</property>
+					      <property name="homogeneous">False</property>
+					      <property name="spacing">2</property>
+
+					      <child>
+						<widget class="GtkImage" id="image37">
+						  <property name="visible">True</property>
+						  <property name="stock">gtk-redo</property>
+						  <property name="icon_size">4</property>
+						  <property name="xalign">0.5</property>
+						  <property name="yalign">0.5</property>
+						  <property name="xpad">0</property>
+						  <property name="ypad">0</property>
+						</widget>
+						<packing>
+						  <property name="padding">0</property>
+						  <property name="expand">False</property>
+						  <property name="fill">False</property>
+						</packing>
+					      </child>
+
+					      <child>
+						<widget class="GtkLabel" id="label243">
+						  <property name="visible">True</property>
+						  <property name="label" translatable="yes">&lt;b&gt;Rainfall grids&lt;/b&gt;</property>
+						  <property name="use_underline">True</property>
+						  <property name="use_markup">True</property>
+						  <property name="justify">GTK_JUSTIFY_LEFT</property>
+						  <property name="wrap">False</property>
+						  <property name="selectable">False</property>
+						  <property name="xalign">0.5</property>
+						  <property name="yalign">0.5</property>
+						  <property name="xpad">0</property>
+						  <property name="ypad">0</property>
+						  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+						  <property name="width_chars">-1</property>
+						  <property name="single_line_mode">False</property>
+						  <property name="angle">0</property>
+						</widget>
+						<packing>
+						  <property name="padding">0</property>
+						  <property name="expand">False</property>
+						  <property name="fill">False</property>
+						</packing>
+					      </child>
+					    </widget>
+					  </child>
+					</widget>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">False</property>
+				      <property name="fill">False</property>
+				    </packing>
+				  </child>
+				</widget>
+				<packing>
+				  <property name="padding">0</property>
+				  <property name="expand">False</property>
+				  <property name="fill">False</property>
+				</packing>
+			      </child>
+
+			      <child>
+				<widget class="GtkVBox" id="vbox69">
+				  <property name="visible">True</property>
+				  <property name="homogeneous">False</property>
+				  <property name="spacing">0</property>
+
+				  <child>
+				    <widget class="GtkHBox" id="hbox159">
+				      <property name="visible">True</property>
+				      <property name="homogeneous">False</property>
+				      <property name="spacing">0</property>
+
+				      <child>
+					<widget class="GtkLabel" id="label244">
+					  <property name="visible">True</property>
+					  <property name="label" translatable="yes">Rain surface grids -- select one file, then use symbols to specify the set of files:</property>
+					  <property name="use_underline">False</property>
+					  <property name="use_markup">False</property>
+					  <property name="justify">GTK_JUSTIFY_LEFT</property>
+					  <property name="wrap">False</property>
+					  <property name="selectable">False</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xpad">0</property>
+					  <property name="ypad">0</property>
+					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+					  <property name="width_chars">-1</property>
+					  <property name="single_line_mode">False</property>
+					  <property name="angle">0</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">False</property>
+				      <property name="fill">False</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkHBox" id="hbox160">
+				      <property name="visible">True</property>
+				      <property name="homogeneous">False</property>
+				      <property name="spacing">0</property>
+
+				      <child>
+					<widget class="GtkButton" id="rain_choose_grid_file_button">
+					  <property name="visible">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="label" translatable="yes">Select file...</property>
+					  <property name="use_underline">True</property>
+					  <property name="relief">GTK_RELIEF_NORMAL</property>
+					  <property name="focus_on_click">True</property>
+					  <signal name="clicked" handler=".hs_on_rain_choose_grid_file_button_clicked" last_modification_time="Fri, 31 Aug 2007 08:34:26 GMT"/>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+
+				      <child>
+					<widget class="GtkEntry" id="rain_grid_files_pattern_entry">
+					  <property name="visible">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="editable">True</property>
+					  <property name="visibility">True</property>
+					  <property name="max_length">0</property>
+					  <property name="text" translatable="yes"></property>
+					  <property name="has_frame">True</property>
+					  <property name="invisible_char">*</property>
+					  <property name="activates_default">False</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">True</property>
+					  <property name="fill">True</property>
+					</packing>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">True</property>
+				      <property name="fill">True</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkHBox" id="hbox161">
+				      <property name="visible">True</property>
+				      <property name="homogeneous">False</property>
+				      <property name="spacing">0</property>
+
+				      <child>
+					<widget class="GtkLabel" id="label245">
+					  <property name="visible">True</property>
+					  <property name="label" translatable="yes">Replace year with &lt;tt&gt;%Y&lt;/tt&gt; (or &lt;tt&gt;%y&lt;/tt&gt;  for 2 digits). Years vary from </property>
+					  <property name="use_underline">False</property>
+					  <property name="use_markup">True</property>
+					  <property name="justify">GTK_JUSTIFY_LEFT</property>
+					  <property name="wrap">False</property>
+					  <property name="selectable">False</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xpad">0</property>
+					  <property name="ypad">0</property>
+					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+					  <property name="width_chars">-1</property>
+					  <property name="single_line_mode">False</property>
+					  <property name="angle">0</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+
+				      <child>
+					<widget class="GtkSpinButton" id="rain_grids_from_year_spinbutton">
+					  <property name="visible">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="climb_rate">1</property>
+					  <property name="digits">0</property>
+					  <property name="numeric">True</property>
+					  <property name="update_policy">GTK_UPDATE_ALWAYS</property>
+					  <property name="snap_to_ticks">False</property>
+					  <property name="wrap">False</property>
+					  <property name="adjustment">1990 0 9999 1 10 10</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">True</property>
+					</packing>
+				      </child>
+
+				      <child>
+					<widget class="GtkLabel" id="label246">
+					  <property name="visible">True</property>
+					  <property name="label" translatable="yes"> to </property>
+					  <property name="use_underline">False</property>
+					  <property name="use_markup">False</property>
+					  <property name="justify">GTK_JUSTIFY_LEFT</property>
+					  <property name="wrap">False</property>
+					  <property name="selectable">False</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xpad">0</property>
+					  <property name="ypad">0</property>
+					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+					  <property name="width_chars">-1</property>
+					  <property name="single_line_mode">False</property>
+					  <property name="angle">0</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+
+				      <child>
+					<widget class="GtkSpinButton" id="rain_grids_to_year_spinbutton">
+					  <property name="visible">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="climb_rate">1</property>
+					  <property name="digits">0</property>
+					  <property name="numeric">True</property>
+					  <property name="update_policy">GTK_UPDATE_ALWAYS</property>
+					  <property name="snap_to_ticks">False</property>
+					  <property name="wrap">False</property>
+					  <property name="adjustment">2000 0 9999 1 10 10</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">True</property>
+					</packing>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">False</property>
+				      <property name="fill">True</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkHBox" id="hbox164">
+				      <property name="visible">True</property>
+				      <property name="homogeneous">False</property>
+				      <property name="spacing">0</property>
+
+				      <child>
+					<widget class="GtkLabel" id="label249">
+					  <property name="visible">True</property>
+					  <property name="label" translatable="yes">Replace month with &lt;tt&gt;%m&lt;/tt&gt;  (01 - 12), or &lt;tt&gt;%#m&lt;/tt&gt;  (1 - 12), or &lt;tt&gt;%b&lt;/tt&gt;  (Jan - Dec).</property>
+					  <property name="use_underline">False</property>
+					  <property name="use_markup">True</property>
+					  <property name="justify">GTK_JUSTIFY_LEFT</property>
+					  <property name="wrap">False</property>
+					  <property name="selectable">False</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xpad">0</property>
+					  <property name="ypad">0</property>
+					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+					  <property name="width_chars">-1</property>
+					  <property name="single_line_mode">False</property>
+					  <property name="angle">0</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">False</property>
+				      <property name="fill">False</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkHSeparator" id="hseparator35">
+				      <property name="visible">True</property>
+				    </widget>
+				    <packing>
+				      <property name="padding">2</property>
+				      <property name="expand">True</property>
+				      <property name="fill">True</property>
+				    </packing>
+				  </child>
+
+				  <child>
+				    <widget class="GtkHBox" id="hbox158">
+				      <property name="visible">True</property>
+				      <property name="homogeneous">False</property>
+				      <property name="spacing">0</property>
+
+				      <child>
+					<widget class="GtkButton" id="rain_grids_make_areal_button">
+					  <property name="visible">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="label" translatable="yes">Calculate areal rainfall series</property>
+					  <property name="use_underline">True</property>
+					  <property name="relief">GTK_RELIEF_NORMAL</property>
+					  <property name="focus_on_click">True</property>
+					  <signal name="clicked" handler=".hs_on_rain_grids_make_areal_button_clicked" last_modification_time="Mon, 03 Sep 2007 08:19:58 GMT"/>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+
+				      <child>
+					<widget class="GtkLabel" id="label250">
+					  <property name="visible">True</property>
+					  <property name="label" translatable="yes"> (creates an object &quot;areal.grids&quot;)</property>
+					  <property name="use_underline">False</property>
+					  <property name="use_markup">False</property>
+					  <property name="justify">GTK_JUSTIFY_LEFT</property>
+					  <property name="wrap">False</property>
+					  <property name="selectable">False</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xpad">0</property>
+					  <property name="ypad">0</property>
+					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+					  <property name="width_chars">-1</property>
+					  <property name="single_line_mode">False</property>
+					  <property name="angle">0</property>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+				    </widget>
+				    <packing>
+				      <property name="padding">0</property>
+				      <property name="expand">True</property>
+				      <property name="fill">True</property>
+				    </packing>
+				  </child>
+				</widget>
+				<packing>
+				  <property name="padding">0</property>
+				  <property name="expand">True</property>
+				  <property name="fill">True</property>
+				</packing>
+			      </child>
+			    </widget>
+			  </child>
+			</widget>
+		      </child>
+
+		      <child>
+			<widget class="GtkLabel" id="label242">
+			  <property name="visible">True</property>
+			  <property name="label" translatable="yes">&lt;b&gt;Areal rainfall from existing spatial grids (monthly / annual / overall)&lt;/b&gt;</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">True</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -7940,7 +8451,7 @@ extend</property>
 				  <property name="spacing">0</property>
 
 				  <child>
-				    <widget class="GtkRadioButton" id="rain_area_byvoronoi_radiobutton">
+				    <widget class="GtkRadioButton" id="rain_area_by_weighting_radiobutton">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
 				      <property name="label" translatable="yes">Area weighting of gauge data (calculated from Voronoi mosaic).</property>
@@ -7959,17 +8470,17 @@ extend</property>
 				  </child>
 
 				  <child>
-				    <widget class="GtkRadioButton" id="rain_areal_bysurface_radiobutton">
+				    <widget class="GtkRadioButton" id="rain_areal_by_grids_radiobutton">
 				      <property name="visible">True</property>
 				      <property name="can_focus">True</property>
-				      <property name="label" translatable="yes">Scaling of gauge data by areal rainfall surface in mosaic:</property>
+				      <property name="label" translatable="yes">Area weighting of gauge data with scaling to existing areal rainfall grids:</property>
 				      <property name="use_underline">True</property>
 				      <property name="relief">GTK_RELIEF_NORMAL</property>
 				      <property name="focus_on_click">True</property>
 				      <property name="active">False</property>
 				      <property name="inconsistent">False</property>
 				      <property name="draw_indicator">True</property>
-				      <property name="group">rain_area_byvoronoi_radiobutton</property>
+				      <property name="group">rain_area_by_weighting_radiobutton</property>
 				    </widget>
 				    <packing>
 				      <property name="padding">0</property>
@@ -7979,96 +8490,27 @@ extend</property>
 				  </child>
 
 				  <child>
-				    <widget class="GtkHBox" id="hbox154">
+				    <widget class="GtkLabel" id="label253">
 				      <property name="visible">True</property>
-				      <property name="homogeneous">False</property>
-				      <property name="spacing">0</property>
-
-				      <child>
-					<widget class="GtkLabel" id="label239">
-					  <property name="visible">True</property>
-					  <property name="label" translatable="yes">Rain surface grid: </property>
-					  <property name="use_underline">False</property>
-					  <property name="use_markup">False</property>
-					  <property name="justify">GTK_JUSTIFY_LEFT</property>
-					  <property name="wrap">False</property>
-					  <property name="selectable">False</property>
-					  <property name="xalign">0.5</property>
-					  <property name="yalign">0.5</property>
-					  <property name="xpad">0</property>
-					  <property name="ypad">0</property>
-					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
-					  <property name="width_chars">-1</property>
-					  <property name="single_line_mode">False</property>
-					  <property name="angle">0</property>
-					</widget>
-					<packing>
-					  <property name="padding">0</property>
-					  <property name="expand">False</property>
-					  <property name="fill">False</property>
-					</packing>
-				      </child>
-
-				      <child>
-					<widget class="GtkFileChooserButton" id="filechooserbutton1">
-					  <property name="visible">True</property>
-					  <property name="title" translatable="yes">Select A File</property>
-					  <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
-					  <property name="local_only">True</property>
-					  <property name="show_hidden">False</property>
-					  <property name="do_overwrite_confirmation">False</property>
-					  <property name="width_chars">24</property>
-					</widget>
-					<packing>
-					  <property name="padding">0</property>
-					  <property name="expand">False</property>
-					  <property name="fill">True</property>
-					</packing>
-				      </child>
-
-				      <child>
-					<widget class="GtkLabel" id="label238">
-					  <property name="visible">True</property>
-					  <property name="label" translatable="yes"> as </property>
-					  <property name="use_underline">False</property>
-					  <property name="use_markup">False</property>
-					  <property name="justify">GTK_JUSTIFY_LEFT</property>
-					  <property name="wrap">False</property>
-					  <property name="selectable">False</property>
-					  <property name="xalign">0.5</property>
-					  <property name="yalign">0.5</property>
-					  <property name="xpad">0</property>
-					  <property name="ypad">0</property>
-					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
-					  <property name="width_chars">-1</property>
-					  <property name="single_line_mode">False</property>
-					  <property name="angle">0</property>
-					</widget>
-					<packing>
-					  <property name="padding">0</property>
-					  <property name="expand">False</property>
-					  <property name="fill">False</property>
-					</packing>
-				      </child>
-
-				      <child>
-					<widget class="GtkComboBox" id="combobox1">
-					  <property name="visible">True</property>
-					  <property name="items" translatable="yes">(empty)</property>
-					  <property name="add_tearoffs">False</property>
-					  <property name="focus_on_click">True</property>
-					</widget>
-					<packing>
-					  <property name="padding">0</property>
-					  <property name="expand">False</property>
-					  <property name="fill">True</property>
-					</packing>
-				      </child>
+				      <property name="label" translatable="yes">(the rain surface grids must be specified above)</property>
+				      <property name="use_underline">False</property>
+				      <property name="use_markup">False</property>
+				      <property name="justify">GTK_JUSTIFY_LEFT</property>
+				      <property name="wrap">False</property>
+				      <property name="selectable">False</property>
+				      <property name="xalign">0.5</property>
+				      <property name="yalign">0.5</property>
+				      <property name="xpad">0</property>
+				      <property name="ypad">0</property>
+				      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+				      <property name="width_chars">-1</property>
+				      <property name="single_line_mode">False</property>
+				      <property name="angle">0</property>
 				    </widget>
 				    <packing>
 				      <property name="padding">0</property>
-				      <property name="expand">True</property>
-				      <property name="fill">True</property>
+				      <property name="expand">False</property>
+				      <property name="fill">False</property>
 				    </packing>
 				  </child>
 
@@ -8079,14 +8521,39 @@ extend</property>
 				      <property name="spacing">0</property>
 
 				      <child>
-					<widget class="GtkButton" id="rain_make_areal_button">
+					<widget class="GtkButton" id="rain_mosaic_make_areal_button">
 					  <property name="visible">True</property>
 					  <property name="can_focus">True</property>
 					  <property name="label" translatable="yes">Calculate areal rainfall series</property>
 					  <property name="use_underline">True</property>
 					  <property name="relief">GTK_RELIEF_NORMAL</property>
 					  <property name="focus_on_click">True</property>
-					  <signal name="clicked" handler=".hs_on_rain_make_areal_button_clicked" last_modification_time="Wed, 15 Aug 2007 08:18:37 GMT"/>
+					  <signal name="clicked" handler=".hs_on_rain_mosaic_make_areal_button_clicked" last_modification_time="Mon, 03 Sep 2007 08:19:06 GMT"/>
+					</widget>
+					<packing>
+					  <property name="padding">0</property>
+					  <property name="expand">False</property>
+					  <property name="fill">False</property>
+					</packing>
+				      </child>
+
+				      <child>
+					<widget class="GtkLabel" id="label251">
+					  <property name="visible">True</property>
+					  <property name="label" translatable="yes"> (creates an object &quot;areal.weighted&quot;)</property>
+					  <property name="use_underline">False</property>
+					  <property name="use_markup">False</property>
+					  <property name="justify">GTK_JUSTIFY_LEFT</property>
+					  <property name="wrap">False</property>
+					  <property name="selectable">False</property>
+					  <property name="xalign">0.5</property>
+					  <property name="yalign">0.5</property>
+					  <property name="xpad">0</property>
+					  <property name="ypad">0</property>
+					  <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+					  <property name="width_chars">-1</property>
+					  <property name="single_line_mode">False</property>
+					  <property name="angle">0</property>
 					</widget>
 					<packing>
 					  <property name="padding">0</property>
@@ -8116,7 +8583,7 @@ extend</property>
 		      <child>
 			<widget class="GtkLabel" id="label235">
 			  <property name="visible">True</property>
-			  <property name="label" translatable="yes">&lt;b&gt;Areal rainfall&lt;/b&gt;</property>
+			  <property name="label" translatable="yes">&lt;b&gt;Areal rainfall from gauges, weighted by area&lt;/b&gt;</property>
 			  <property name="use_underline">False</property>
 			  <property name="use_markup">True</property>
 			  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -10512,8 +10979,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA</property>
   <property name="wrap_license">False</property>
-  <property name="website">http://code.google.com/p/hydrosanity/</property>
-  <property name="website_label" translatable="yes">http://code.google.com/p/hydrosanity/</property>
+  <property name="website">http://hydrosanity.googlecode.com/</property>
+  <property name="website_label" translatable="yes">http://hydrosanity.googlecode.com/</property>
   <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
 </widget>
 

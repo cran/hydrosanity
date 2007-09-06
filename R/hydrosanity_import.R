@@ -99,10 +99,10 @@ updateImportPage <- function() {
 	freezeGUI()
 	on.exit(thawGUI())
 	
-	filenames <- choose.files(multi=T)
+	filename <- try(file.choose(), silent=T)
 	StateEnv$win$present()
-	if (length(filenames)==0) { return() }
-	file.show(filenames)
+	if (inherits(filename, "try-error")) return()
+	file.show(filename)
 }
 
 .hs_on_import_viewtable_button_clicked <- function(button) {
@@ -136,6 +136,7 @@ updateImportPage <- function() {
 	freezeGUI()
 	on.exit(thawGUI())
 	
+	# TODO this probably windows-only -- do it with GTK?
 	filenames <- choose.files()
 	StateEnv$win$present()
 	if (length(filenames)==0) { return() }

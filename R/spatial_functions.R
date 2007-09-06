@@ -220,12 +220,16 @@ as.Polygons.gpc.poly <- function(x, ID) {
 	Polygons(thisPolys, ID)
 }
 
-readFltRaster <- function(filename, ...) {
-	foo <- readGDAL(filename, ...)
-	foo.dim <- gridparameters(foo)$cells.dim
-	binDat <- readBin(filename, "double", n=prod(foo.dim), size=4)
-	binDat[binDat == -9999] <- NA
-	foo@data[[1]] <- binDat
-	foo
+readGDAL_FLTfix <- function(fname, ...) {
+	if (get.extension(tolower(fname)) == "flt") {
+		foo <- readGDAL(fname, ...)
+		foo.dim <- gridparameters(foo)$cells.dim
+		binDat <- readBin(fname, "double", n=prod(foo.dim), size=4)
+		binDat[binDat == -9999] <- NA
+		foo@data[[1]] <- binDat
+		return(foo)
+	}
+	readGDAL(fname, ...)
 }
+
 

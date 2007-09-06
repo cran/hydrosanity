@@ -457,6 +457,7 @@ aggregate.timeblob <- function(x, by="1 year", FUN=mean, fun.qual=c("worst","med
 	fun.qual <- match.arg(fun.qual)
 	if (is.null(start.month)) start.month <- 1
 	if (!is.numeric(start.month)) stop("'start.month' must be a month number")
+	if (identical(by, attr(x, "timestep"))) return(x)
 	# disaccumulate (redistribute values accumulated over multiple time-steps)
 	# (just distribute evenly over gap, should be good enough for aggregating)
 	if (!is.null(x$AccumSteps)) {
@@ -488,7 +489,7 @@ aggregate.timeblob <- function(x, by="1 year", FUN=mean, fun.qual=c("worst","med
 	newEnd <- incr.POSIXt(end(x), by=attr(x, "timestep"))
 	x <- window(x, start=newStart, end=newEnd, extend=T)
 	# construct groups
-	dateGroups <- cut.POSIXt(x$Time, breaks=by)
+	dateGroups <- cut.POSIXt(x$Time, breaks=by, include.lowest=TRUE)
 	newDates <- as.POSIXct(levels(dateGroups), tz=attr(x$Time, "tzone"))
 	# aggregate
 	aggrVars <- c("Data")
@@ -832,14 +833,24 @@ impute.timeblobs <- function(blob.list, which.impute=names(blob.list), timelim=N
 	return(blob.list[which.impute])
 }
 
-imputeGaps.timeblobs <- function(blob.list, which.impute=names(blob.list), type=c("disaccumulated", "imputed"), fallBackToConstantDisaccum=T, maxGapLength=Inf, internalGapsOnly=F, ...) {
+imputeGaps.timeblobs <- function(blob.list, which.impute=names(blob.list), type=c("disaccumulated", "imputed"), fallBackToConstantDisaccum=T, maxGapLength=Inf, extend=F, ...) {
 	type <- match.arg(type, several.ok=T)
 	# first, impute
-	imputed.blobs <- impute.timeblobs(blob.list, which.impute=which.impute, ...)
+	imputed.blobs <- impute.timeblobs(blob.list, which.impute=which.impute,
+		extend=extend, ...)
 	# then, fill in the imputed values in gaps
 	for (x in which.impute) {
 		impBlob <- imputed.blobs[[x]]
 		imputedPeriod <- timelim.timeblobs(impBlob)
+		# if imputing beyond ends of the record, need to extend here too
+		if (start(blob.list[[x]]) > start(impBlob)) {
+			blob.list[[x]] <- window(blob.list[[x]], 
+				start=start(impBlob), extend=T)
+		}
+		if (end(blob.list[[x]]) < end(impBlob)) {
+			blob.list[[x]] <- window(blob.list[[x]], 
+				end=end(impBlob), extend=T)
+		}
 		lim <- window(blob.list[[x]], start(impBlob), end(impBlob), 
 			return.indices=T)
 		#lim <- findInterval(imputedPeriod, blob.list[[x]]$Time)
@@ -893,7 +904,7 @@ imputeGaps.timeblobs <- function(blob.list, which.impute=names(blob.list), type=
 				tmpBlob$Data[(tmpBlob$AccumSteps > 1)] <- NA
 			}
 			allGaps <- expand.indices(gaps(tmpBlob$Data, max.length=maxGapLength,
-				internal.only=internalGapsOnly))
+				internal.only=!extend))
 			allGapsOrig <- allGaps + lim[1] - 1
 			levels(blob.list[[x]]$Qual) <- union(levels(blob.list[[x]]$Qual),
 				"imputed")

@@ -4,6 +4,7 @@
 \alias{sqrtPretty}
 \alias{select.sites.BOM.AU}
 \alias{addToLog}
+\alias{readGDAL_FLTfix}
 \alias{prepanel.qqmath.fix}
 \title{Internal Hydrosanity functions}
 \description{Ignore these.}

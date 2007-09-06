@@ -17,7 +17,7 @@ updateRainPage <- function() {
 		return()
 	}
 	if (length(selNames) < 4) {
-		errorDialog("Need at least 4 items for spatial interpolation.")
+		errorDialog("Select at least 4 items.")
 		return()
 	}
 	nBlobs <- length(selNames)
@@ -181,6 +181,140 @@ updateRainPage <- function() {
 	setStatusBar("Generated rainfall map")
 }
 
+.hs_on_rain_view_grids_button_clicked <- function(button) {
+	freezeGUI(use.core.log=F)
+	on.exit(thawGUI())
+	
+	filePattern <- theWidget("rain_grid_files_pattern_entry")$getText()
+	fromYear <- theWidget("rain_grids_from_year_spinbutton")$getValue()
+	toYear <- theWidget("rain_grids_to_year_spinbutton")$getValue()
+	
+	monthsVary <- any(grep("%#?[mb]", filePattern))
+	yearsVary <- any(grep("%#?[Yy]", filePattern))
+	
+	addLogComment("Generate plot of areal rainfall grids")
+	
+	tmpObjs <- c()
+	
+	if (!yearsVary && !monthsVary) {
+		tmpObjs <- c(tmpObjs, "tmp.grid")
+		guiDo(call=bquote(
+			tmp.grid <- readGDAL_FLTfix(.(filePattern))
+		))
+		plot.call <- quote(
+			levelplot(band1 ~ x * y, data=as(tmp.grid, "data.frame"))
+		)
+	}
+	
+	if (yearsVary || monthsVary) {
+		tmpObjs <- c(tmpObjs, "tmp.times")
+		
+		guiDo(call=bquote({
+			tmp.times <- seq(ISOdate(.(fromYear),1,1,0), 
+				ISOdate(.(toYear),1,1,0)-1, 
+				by=.(if (monthsVary) "months" else "years"))
+		}))
+		
+		plot.call <- bquote(
+			spplot(readGDAL_FLTfix(format(tmp.times[gui.index], .(filePattern))), 
+				formula=band1~x*y | format(tmp.times[gui.index], 
+				.(if (monthsVary) "%Y" else "%Y %b")))
+		)
+		
+		plot.call <- bquote(
+			levelplot(band1 ~ x * y | format(tmp.times[gui.index], 
+				.(if (monthsVary) "%Y %b" else "%Y")), 
+				data={
+					fname <- .(filePattern)
+					myGrid <- readGDAL_FLTfix(format(tmp.times[gui.index], fname))
+					as(myGrid, "data.frame")
+				})
+		)
+	}
+	
+	plot.call$aspect <- "iso"
+	
+	plot.call$panel <- function(...) {
+		panel.levelplot(...)
+		panel.worldmap()
+		panel.rivers()
+		panel.cities()
+		if (!is.null(hsp$catchment))
+			sp.polygons(hsp$catchment)
+	}
+	
+	if (!is.null(hsp$region)) {
+		plot.call$xlim <- quote(hsp$region$xlim)
+		plot.call$ylim <- quote(hsp$region$ylim)
+	}
+	
+	myExtras <- if (yearsVary || monthsVary) list("index")
+	addToLog(paste(deparse(plot.call), collapse="\n"))
+	guiDo(playwith(plot.call=plot.call, name="Areal rainfall grids", 
+		extra.buttons=myExtras, labels=NA,
+		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+		doLog=F)
+	
+	if (length(tmpObjs) > 0) {
+		guiDo(call=bquote(rm(list=.(tmpObjs))))
+	}
+	
+	setStatusBar("Generated plot of areal rainfall grids")
+}
+
+.hs_on_rain_grids_make_areal_button_clicked <- function(button) {
+	freezeGUI()
+	on.exit(thawGUI())
+	
+	filePattern <- theWidget("rain_grid_files_pattern_entry")$getText()
+	fromYear <- theWidget("rain_grids_from_year_spinbutton")$getValue()
+	toYear <- theWidget("rain_grids_to_year_spinbutton")$getValue()
+	monthsVary <- any(grep("%#?[mb]", filePattern))
+	yearsVary <- any(grep("%#?[Yy]", filePattern))
+	
+	addLogComment("Generate areal rainfall from grids")
+	
+	tmpObjs <- c("tmp.times")
+		
+	if (!yearsVary && !monthsVary) {
+		guiDo(call=bquote({
+			tmp.times <- ISOdate(.(fromYear),1,1,0)
+		}))
+	} else {
+		guiDo(call=bquote({
+			tmp.times <- seq(ISOdate(.(fromYear),1,1,0), 
+				ISOdate(.(toYear+1),1,1,0)-1, 
+				by=.(if (monthsVary) "months" else "years"))
+		}))
+	}
+	
+	tmpObjs <- c(tmpObjs, "tmp.data", "tmp.fname", "myGrid")
+	
+	guiDo(call=bquote({
+		tmp.fname <- .(filePattern)
+	}))
+	
+	guiDo({
+		tmp.data <- 0
+		for (i in seq_along(tmp.times)) {
+			myGrid <- try(readGDAL_FLTfix(format(tmp.times[i], tmp.fname)))
+			if (inherits(myGrid, "try-error")) tmp.data[i] <- NA
+			else tmp.data[i] <- overlay(as(myGrid, "SpatialPointsDataFrame"),
+				hsp$catchment, fn=mean)[,1]
+		}
+	})
+	
+	guiDo(hsp$data[["areal.grids"]] <- timeblob(Time=tmp.times, Data=tmp.data))
+	
+	if (length(tmpObjs) > 0) {
+		guiDo(call=bquote(rm(list=.(tmpObjs))))
+	}
+	
+	setStatusBar("Generated areal rainfall from grids")
+	
+	datasetModificationUpdate()
+}
+
 .hs_on_rain_view_mosaic_button_clicked <- function(button) {
 	freezeGUI(use.core.log=F)
 	on.exit(thawGUI())
@@ -190,8 +324,8 @@ updateRainPage <- function() {
 		errorDialog("No items selected.")
 		return()
 	}
-	if (length(selNames) < 4) {
-		errorDialog("Need at least 4 items for spatial interpolation.")
+	if (length(selNames) < 2) {
+		errorDialog("Select at least 2 items.")
 		return()
 	}
 	nBlobs <- length(selNames)
@@ -266,7 +400,7 @@ updateRainPage <- function() {
 	setStatusBar("Generated Voronoi mosaic plot")
 }
 
-.hs_on_rain_make_areal_button_clicked <- function(button) {
+.hs_on_rain_mosaic_make_areal_button_clicked <- function(button) {
 	freezeGUI()
 	on.exit(thawGUI())
 	
@@ -275,17 +409,24 @@ updateRainPage <- function() {
 		errorDialog("No items selected.")
 		return()
 	}
-	if (length(selNames) < 4) {
-		errorDialog("Need at least 4 items for spatial interpolation.")
+	if (length(selNames) < 2) {
+		errorDialog("Select at least 2 items.")
 		return()
 	}
 	nBlobs <- length(selNames)
 	
-	doByVoronoi <- theWidget("rain_area_byvoronoi_radiobutton")$getActive()
-	doBySurface <- theWidget("rain_areal_bysurface_radiobutton")$getActive()
+	doByWeighting <- theWidget("rain_area_by_weighting_radiobutton")$getActive()
+	doByGrids <- theWidget("rain_areal_by_grids_radiobutton")$getActive()
+	filePattern <- theWidget("rain_grid_files_pattern_entry")$getText()
+	fromYear <- theWidget("rain_grids_from_year_spinbutton")$getValue()
+	toYear <- theWidget("rain_grids_to_year_spinbutton")$getValue()
+	monthsVary <- any(grep("%#?[mb]", filePattern))
+	yearsVary <- any(grep("%#?[Yy]", filePattern))
 	
-	if (doBySurface) {
-		errorDialog("Sorry, this does not work yet.")
+	if (!yearsVary) { toYear <- fromYear }
+	
+	if (!yearsVary && !monthsVary) {
+		errorDialog("Only one grid was specified. This is not supported (yet).")
 		return()
 	}
 	
@@ -304,7 +445,7 @@ updateRainPage <- function() {
 		return()
 	}
 	
-	addLogComment("Generate Voronoi mosaic")
+	addLogComment("Generate areal rainfall from Voronoi mosaic")
 	
 	tmpObjs <- c('tmp.names')
 	
@@ -323,25 +464,87 @@ updateRainPage <- function() {
 		tmp.subPolys <- arealSubPolygons(tmp.locs, boundary=coordinates(tmp.poly))
 		tmp.subAreas <- sapply(tmp.subPolys@polygons, getPolygonAreaSlot)
 		tmp.areaFrac <- tmp.subAreas / tmp.poly@area
-	})
-	
-	if (doBySurface) {
-		#grid1 <- readFltRaster("G:/Projects/Tuross/surface_files/rainfall_surface/year2000/rainGrid_20001.flt")
-		#overlay(as(grid1, "SpatialPointsDataFrame"), tmp.subPolys, fn=mean)
-	}
-	
-	guiDo({
+		
 		tmp.polyNames <- getSpPPolygonsIDSlots(tmp.subPolys)
 		tmp.data <- lapply(hsp$data[tmp.polyNames], window, hsp$timePeriod[1], hsp$timePeriod[2])
 		tmp.data <- lapply(tmp.data, quick.disaccumulate.timeblob)
-		tmp.data <- sync.timeblobs(tmp.data)
-		tmp.time <- tmp.data$Time
-		tmp.areal <- apply(tmp.data[-1], ROWS<-1, weighted.mean, w=tmp.areaFrac)
-		hsp$data[["areal"]] <- timeblob(Time=tmp.time, Data=tmp.areal)
+		tmp.sync <- sync.timeblobs(tmp.data)
+		tmp.synctime <- tmp.sync$Time
+		tmp.sync <- tmp.sync[-1]
 	})
 	
-	setStatusBar("Generated areal rainfall series from ", length(tmp.subAreas), " gauges.")
+	if (doByGrids) {
+		addToLog("# Read in grids")
+		
+		tmpObjs <- c(tmpObjs, "tmp.times")
+		
+		myBy <- if (monthsVary) "months" else "years"
+		guiDo(call=bquote({
+			tmp.gridtime <- seq(ISOdate(.(fromYear),1,1,0), 
+				ISOdate(.(toYear+1),1,1,0)-1, 
+				by=.(myBy))
+		}))
+		
+		tmpObjs <- c(tmpObjs, "tmp.data", "tmp.fname", "myGrid")
+		
+		guiDo(call=bquote({
+			tmp.by <- .(myBy)
+			tmp.fname <- .(filePattern)
+		}))
+		
+		guiDo({
+			tmp.gridvals <- list()
+			for (i in seq_along(tmp.gridtime)) {
+				myGrid <- try(readGDAL_FLTfix(format(tmp.gridtime[i], tmp.fname)))
+				tmp.gridvals[[i]] <- if (inherits(myGrid, "try-error")) NA
+					else overlay(as(myGrid, "SpatialPointsDataFrame"),
+						tmp.subPolys, fn=mean)[,1]
+			}
+			# columns are time steps, rows are sub-polygon regions
+			tmp.gridvals <- as.data.frame(tmp.gridvals)
+			# transpose, so columns are regions, rows are time steps
+			tmp.gridvals <- as.data.frame(t(tmp.gridvals))
+			# make it a timeblob
+			tmp.gridblob <- timeblob(Time=tmp.gridtime, Data=tmp.gridvals)
+			
+			# now aggregate gauge data to monthly and sync it
+			tmp.monthdata <- lapply(tmp.data, aggregate, by=tmp.by)
+			tmp.monthdata <- syncTo.timeblobs(tmp.monthdata, blob=tmp.gridblob)[-1]
+			tmp.scale <- tmp.monthdata
+			
+			# scale each month of the gauge data so month sum equal to grid value
+			for (i in seq_along(tmp.monthdata)) {
+				tmp.scale[[i]] <- tmp.gridvals[[i]] / tmp.monthdata[[i]]
+			}
+			
+			# apply scale factors to original data
+			mySyncIndices <- matchtimes.timeblob(tmp.gridblob, times=tmp.synctime)
+			for (i in seq_along(tmp.sync)) {
+				tmp.sync[[i]] <- tmp.sync[[i]] * tmp.scale[[i]][mySyncIndices]
+			}
+		})
+	}
+	
+	# compute areal (area-weighted) time series
+	guiDo({
+		tmp.areal <- apply(tmp.sync, ROWS<-1, weighted.mean, w=tmp.areaFrac)
+		hsp$data[["areal.weighted"]] <- timeblob(Time=tmp.synctime, Data=tmp.areal)
+	})
+	
+	# TODO: remove tmps
+	
+	setStatusBar("Generated areal rainfall by weighting ", length(tmp.subAreas), " gauges.")
 	
 	datasetModificationUpdate()
+}
+
+
+## NON-ACTIONS, just interface bits and pieces
+
+.hs_on_rain_choose_grid_file_button_clicked <- function(button) {
+	filename <- try(file.choose(), silent=T)
+	StateEnv$win$present()
+	if (inherits(filename, "try-error")) return()
+	theWidget("rain_grid_files_pattern_entry")$setText(filename)
 }
 

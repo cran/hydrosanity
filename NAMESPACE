@@ -20,7 +20,8 @@ export(
 	prepanel.extend.10,
 	sqrtPalette,
 	sqrtPretty,
-	arealSubPolygons
+	arealSubPolygons,
+	readGDAL_FLTfix
 )
 	
 ## timeblob_plots.R

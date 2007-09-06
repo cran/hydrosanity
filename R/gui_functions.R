@@ -344,6 +344,7 @@ setStatusBar <- function(..., sep="")
 {
   msg <- paste(sep=sep, ...)
   if (length(msg) == 0) msg <-""
+  theWidget("statusbar")$pop(1)
   theWidget("statusbar")$push(1, msg)
   while (gtkEventsPending()) gtkMainIteration() # Refresh status and windows
   invisible(NULL)

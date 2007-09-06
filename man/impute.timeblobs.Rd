@@ -10,7 +10,7 @@
 \usage{
 impute.timeblobs(blob.list, which.impute = names(blob.list), timelim = NULL, extend = F, withinTimeframe = NA, method = c("distance", "correlation", "constant"), constant = c("mean", "zero", "extend"), trim = 0)
 
-imputeGaps.timeblobs(blob.list, which.impute = names(blob.list), type = c("disaccumulated", "imputed"), fallBackToConstantDisaccum = T, maxGapLength = Inf, internalGapsOnly = F, ...)
+imputeGaps.timeblobs(blob.list, which.impute = names(blob.list), type = c("disaccumulated", "imputed"), fallBackToConstantDisaccum = T, maxGapLength = Inf, extend = F, ...)
 
 quick.disaccumulate.timeblob(blob)
 
@@ -28,7 +28,6 @@ unimputeGaps.timeblobs(blob.list, timelim = NULL, type = c("imputed", "disaccumu
   \item{type}{ ~~Describe \code{type} here~~ }
   \item{fallBackToConstantDisaccum}{ ~~Describe \code{fallBackToConstantDisaccum} here~~ }
   \item{maxGapLength}{ ~~Describe \code{maxGapLength} here~~ }
-  \item{internalGapsOnly}{ ~~Describe \code{internalGapsOnly} here~~ }
   \item{\dots}{ ~~Describe \code{\dots} here~~ }
   \item{blob}{ ~~Describe \code{blob} here~~ }
 }

@@ -423,12 +423,16 @@ updateTimePeriodPage <- function() {
 	
 	addLogComment("Import catchment boundaries from file")
 	
-	select.call <- call(CATCHMENT.FORMATS[[fileFormatIndex]], shapeFile)
+	guiDo(call=bquote(
+		hsp$catchment <- readGDAL_FLTfix(.(shapeFile))
+	))
 	
-	select.assign.call <- quote(hsp$catchment <- foo)
-	select.assign.call[[3]] <- select.call
+	#select.call <- call(CATCHMENT.FORMATS[[fileFormatIndex]], shapeFile)
 	
-	guiDo(call=select.assign.call)
+	#select.assign.call <- quote(hsp$catchment <- foo)
+	#select.assign.call[[3]] <- select.call
+	
+	#guiDo(call=select.assign.call)
 	
 	setStatusBar("Imported catchment boundaries from file")
 }

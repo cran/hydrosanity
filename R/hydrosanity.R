@@ -6,11 +6,11 @@
 
 MAJOR <- "0"
 MINOR <- "8"
-REVISION <- unlist(strsplit("$Revision: 62 $", split=" "))[2]
+REVISION <- unlist(strsplit("$Revision: 64 $", split=" "))[2]
 VERSION <- paste(MAJOR, MINOR, REVISION, sep=".")
 COPYRIGHT <- paste("(c) 2007 Felix Andrews <felix@nfrac.org>\n",
 	" based on Rattle (c) 2006 Graham.Williams@togaware.com")
-WEBSITE <- "http://code.google.com/p/hydrosanity/"
+WEBSITE <- "http://hydrosanity.googlecode.com/"
 
 ## LICENSE
 ##
@@ -50,7 +50,7 @@ if (!exists("StateEnv", environment(), inherits=FALSE)) {
 	StateEnv <- new.env()
 }
 
-hydrosanity <- function() {
+hydrosanity <- function(project = NULL) {
 	if (!is.null(StateEnv$win)) {
 		.hs_on_menu_quit_activate()
 	}
@@ -171,8 +171,14 @@ hydrosanity <- function() {
 	insertTreeViewTextColumns(timeperiodTreeView, 
 		colNames=c("Name", "Min", "Q25", "Median", "Q75", "Max", "Missing", ""))
 	
+	# open the project file if given
+	if (!is.null(project)) {
+		openProject(project)
+	}
+	
 	updateNow()
 	StateEnv$win$present()
+	return(invisible(NULL))
 }
 
 addInitialLogMessage <- function() {

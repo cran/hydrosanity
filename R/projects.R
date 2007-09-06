@@ -7,17 +7,20 @@
 .hs_on_menu_save_activate <- function(action, window) saveProject()
 .hs_on_menu_saveas_activate <- function(action, window) saveProject(saveAs=T)
 
-openProject <- function() {
+openProject <- function(filename=NULL) {
 	freezeGUI()
 	on.exit(thawGUI())
 	
-	ff <- c("Hydrosanity projects (.hydrosanity)", "*.hydrosanity")
-	filename <- choose.files(caption="Open project", filters=ff, multi=F)
-	StateEnv$win$present()
-	if (filename=="") return()
+	if (is.null(filename)) {
+		ff <- c("Hydrosanity projects (.hydrosanity)", "*.hydrosanity")
+		filename <- choose.files(caption="Open project", filters=ff, multi=F)
+		StateEnv$win$present()
+		if (filename=="") return()
+		# reset interface
+		hydrosanity()
+		StateEnv$win$setSensitive(F)
+	}
 	
-	hydrosanity()
-	StateEnv$win$setSensitive(F)
 	load(filename, .GlobalEnv)
 	hsp$modified <<- F
 	hsp$projectFile <<- filename
@@ -33,8 +36,8 @@ openProject <- function() {
 	
 	if (is.null(hsp$version) ||
 		package_version(hsp$version) < package_version("0.5")) {
-		errorDialog("The version of Hydrosanity used to save this project used a different data structure. Maybe you can manually fix hsp$data?")
-		stop("Project file version not supported")
+		errorDialog("Project file version not supported (check hsp$version)")
+		stop("Project file version not supported (check hsp$version)")
 	} else
 	if (package_version(hsp$version) < package_version("0.6")) {
 		# rename a Qual factor level
@@ -80,18 +83,20 @@ openProject <- function() {
 	setStatusBar("Loaded project from ", dQuote(filename))
 }
 
-saveProject <- function(saveAs=F) {
+saveProject <- function(filename=NULL, saveAs=F) {
 	freezeGUI()
 	on.exit(thawGUI())
 	
-	ff <- c("Hydrosanity projects (.hydrosanity)", "*.hydrosanity")
-	filename <- hsp$projectFile
-	if (is.null(filename)) filename <- ""
-	if (saveAs==T || filename=="") {
-		filename <- choose.file.save(filename, caption="Save project",
-			filters=ff)
-		StateEnv$win$present()
-		if (is.na(filename)) return()
+	if (is.null(filename)) {
+		ff <- c("Hydrosanity projects (.hydrosanity)", "*.hydrosanity")
+		filename <- hsp$projectFile
+		if (is.null(filename)) filename <- ""
+		if (saveAs==T || filename=="") {
+			filename <- choose.file.save(filename, 
+				caption="Save project", filters=ff)
+			StateEnv$win$present()
+			if (is.na(filename)) return()
+		}
 	}
 	
 	if (get.extension(filename) != "hydrosanity") {
