@@ -10,6 +10,13 @@ theWidget <- function(name) {
 
 ## Log support
 
+addToLog <- function(..., sep="", end.with="\n") {
+	if (isTRUE(StateEnv$echo.to.log))
+		addTextview(theWidget("log_textview"), ..., end.with, sep=sep)
+	if (isTRUE(StateEnv$echo.to.console))
+		cat(..., end.with, sep=sep)
+}
+
 addLogSeparator <- function() {
 	addToLog("\n",
 		"## ", paste(rep("=", 60), collapse=""), "\n",
@@ -18,19 +25,6 @@ addLogSeparator <- function() {
 
 addLogComment <- function(...) {
 	addToLog("\n## ", ...)
-}
-
-addToFullLog <- function(..., sep="", end.with="\n") {
-	addTextview(theWidget("log_textview"), ..., end.with, sep=sep)
-}
-
-addToCoreLog <- function(..., sep="", end.with="\n") {
-	addTextview(theWidget("core_log_textview"), ..., end.with, sep=sep)
-}
-
-addToLog <- function(...) {
-	addToFullLog(...)
-	if (isTRUE(StateEnv$use.core.log)) addToCoreLog(...)
 }
 
 ## PLOTANDPLAYGTK CALLBACK FUNCTIONS
@@ -249,8 +243,9 @@ treeViewGetSelectedIndices <- function(treeView) {
 
 setupIconView <- function(iconView, itemNames=names(hsp$data)) {
 	
-	rainPixbuf <- gdkPixbufNewFromFile(getpackagefile("icon_RAIN.png"))$retval
 	flowPixbuf <- gdkPixbufNewFromFile(getpackagefile("icon_FLOW.png"))$retval
+	rainPixbuf <- gdkPixbufNewFromFile(getpackagefile("icon_RAIN.png"))$retval
+	arealPixbuf <- gdkPixbufNewFromFile(getpackagefile("icon_AREAL.png"))$retval
 	otherPixbuf <- gdkPixbufNewFromFile(getpackagefile("icon_OTHER.png"))$retval
 	# (or NULL)
 	
@@ -267,8 +262,9 @@ setupIconView <- function(iconView, itemNames=names(hsp$data)) {
 		myRole <- attr(hsp$data[[x]], "role")
 		if (is.null(myRole)) { myRole <- "OTHER" }
 		list_store$set(iter, 2, switch(myRole,
-			"RAIN"=rainPixbuf,
 			"FLOW"=flowPixbuf,
+			"RAIN"=rainPixbuf,
+			"AREAL"=arealPixbuf,
 			otherPixbuf)
 		)
 	}
@@ -327,17 +323,17 @@ iconViewGetSelectedNames <- function(iconView) {
 
 ## Misc
 
-freezeGUI <- function(use.core.log=T) {
+freezeGUI <- function(echo.to.log=T) {
 	StateEnv$win$setSensitive(F)
 	StateEnv$win$getWindow()$setCursor(gdkCursorNew("watch"))
-	StateEnv$use.core.log <- use.core.log
+	StateEnv$echo.to.log <- echo.to.log
 	setStatusBar("")
-	#theWidget("statusbar")$pop(1)
 }
 
 thawGUI <- function() {
 	StateEnv$win$setSensitive(T)
 	StateEnv$win$getWindow()$setCursor(NULL)
+	StateEnv$echo.to.log <- T # default
 }
 
 setStatusBar <- function(..., sep="")

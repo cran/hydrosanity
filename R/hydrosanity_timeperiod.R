@@ -55,7 +55,7 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_viewdbsitemap_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	siteListFile <- theWidget("scope_sitelist_filechooserbutton")$getFilename()
@@ -81,23 +81,23 @@ updateTimePeriodPage <- function() {
 	guiDo(call=select.assign.call)
 	
 	plot.call <- quote(
-		xyplot(y ~ x, tmp.sites, aspect="iso", pch=ifelse(tmp.sites$ok, 19, 21))
+		xyplot(y ~ x, tmp.sites, aspect="iso", pch=ifelse(tmp.sites$ok, 21, 4))
 	)
 	
 	plot.call$panel <- function(x, y, z, labels, ...) {
-		panel.interp(x, y, z, col.regions=grey(seq(0.95,0.65,length=100)))
+		panel.levelplot.interp(x, y, z, col.regions=grey.colors(100, start=0.9, end=0.6))
 		panel.worldmap()
 		panel.rivers()
 		panel.cities()
+		panel.points(x, y, ...)
+		if (FALSE) panel.text(x, y, labels=labels)
 		if (!is.null(hsp$catchment))
 			sp.polygons(hsp$catchment)
-		panel.points(x, y)
-		quote(panel.text(x, y, labels=labels, ...))
 	}
 	
 	# turn layer off by wrapping it in quote()
 	if (!doInterpElev) body(plot.call$panel)[[2]] <- 
-		call('quote', body(plot.call$panel)[[2]])
+		call('if', FALSE, body(plot.call$panel)[[2]])
 	
 	plot.call$z <- quote(tmp.sites$elev)
 	plot.call$labels <- quote(row.names(tmp.sites))
@@ -121,7 +121,7 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_viewdbtimeline_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	siteListFile <- theWidget("scope_sitelist_filechooserbutton")$getFilename()
@@ -193,6 +193,8 @@ updateTimePeriodPage <- function() {
 		return()
 	}
 	
+	addLogComment("Import sites from database")
+	
 	select.call <- call(SITELIST.FORMATS[[siteListFormatIndex]])
 	select.call$siteListFile <- siteListFile
 	select.call$archivePath <- siteDataArchive
@@ -220,6 +222,8 @@ updateTimePeriodPage <- function() {
 	guiDo(hsp$data[names(tmp.sites)] <- tmp.sites)
 	
 	setIsImportMode(FALSE)
+	
+	setStatusBar("Imported sites from database")
 	
 	datasetModificationUpdate()
 }
@@ -289,7 +293,7 @@ updateTimePeriodPage <- function() {
 
 
 .hs_on_timeperiod_viewtimeline_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -318,7 +322,7 @@ updateTimePeriodPage <- function() {
 }
 
 .hs_on_scope_viewsitemap_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	doInterpElev <- theWidget("scope_sitemap_elevation_checkbutton")$getActive()
@@ -361,7 +365,7 @@ updateTimePeriodPage <- function() {
 	)
 	
 	plot.call$panel <- function(x, y, z, labels, ...) {
-		panel.levelplot.interp(x, y, z, col.regions=rev(grey.colors(100)))#grey(seq(0.95,0.65,length=100)))
+		panel.levelplot.interp(x, y, z, col.regions=grey.colors(100, start=0.9, end=0.6))
 		panel.worldmap()
 		panel.rivers()
 		panel.cities()
@@ -414,25 +418,33 @@ updateTimePeriodPage <- function() {
 	on.exit(thawGUI())
 	
 	shapeFile <- theWidget("scope_catchment_filechooserbutton")$getFilename()
-	fileFormatIndex <- theWidget("scope_catchment_format_combobox")$getActive()+1
 	
 	if (is.null(shapeFile)) {
-		errorDialog("Choose the file.")
+		errorDialog("First, choose the file.")
 		return()
 	}
 	
 	addLogComment("Import catchment boundaries from file")
 	
-	guiDo(call=bquote(
-		hsp$catchment <- readGDAL_FLTfix(.(shapeFile))
-	))
+	shapeDir <- dirname(shapeFile)
+	shapeLayer <- get.stem(shapeFile)
 	
-	#select.call <- call(CATCHMENT.FORMATS[[fileFormatIndex]], shapeFile)
-	
-	#select.assign.call <- quote(hsp$catchment <- foo)
-	#select.assign.call[[3]] <- select.call
-	
-	#guiDo(call=select.assign.call)
+	if (require(rgdal, quietly=T)) {
+		guiDo(library(rgdal))
+		guiDo(call=bquote(
+			hsp$catchment <- readOGR(.(shapeDir), .(shapeLayer))
+		))
+	} else if (require(maptools, quietly=T)) {
+		guiDo(library(maptools))
+		guiDo(call=bquote(
+			hsp$catchment <- readShapePoly(.(shapeFile))
+		))
+	} else {
+		errorDialog('You need the "rgdal" package or "maptools" package ',
+			"to import catchment boundaries ",
+			"(note: maptools only supports ESRI shapefiles).")
+		return()
+	}
 	
 	setStatusBar("Imported catchment boundaries from file")
 }
@@ -440,7 +452,7 @@ updateTimePeriodPage <- function() {
 ## NON-ACTIONS, just interface bits and pieces
 
 .hs_on_scope_yearstart_combobox_changed <- function(widget) {
-	StateEnv$use.core.log <- T
+	StateEnv$echo.to.log <- T
 	addToLog("\n")
 	guiDo(call=bquote(hsp$yearStart <- .(widget$getActive()+1)))
 }

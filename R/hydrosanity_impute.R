@@ -8,7 +8,7 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_view_error_scatter_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -108,7 +108,7 @@ updateImputePage <- function() {
 }
 
 .hs_on_impute_missingatrandom_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))

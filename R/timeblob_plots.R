@@ -596,6 +596,27 @@ grid.xaxis.log <- function(logLim=as.numeric(convertX(unit(c(0,1), "npc"), "nati
 	tmp
 }
 
+lattice.y.sqrt <- function(lim, ...) {
+	arglist <- list(...)
+	tmp <- yscale.components.default(lim, ...)
+	##tmp$left$labels$labels <- format(tmp$left$labels$at ^ 2)
+	tmp$left$ticks$at <- sqrt(pretty(pmax(0,tmp$num.limit) ^ 2))
+	tmp$left$labels$at <- tmp$left$ticks$at
+	tmp$left$labels$labels <- format(tmp$left$labels$at ^ 2)
+	return(tmp)
+}
+
+lattice.x.sqrt <- function(lim, ...) {
+	arglist <- list(...)
+	tmp <- xscale.components.default(lim, ...)
+	##tmp$bottom$labels$labels <- format(tmp$bottom$labels$at ^ 2)
+	tmp$bottom$ticks$at <- sqrt(pretty(pmax(0,tmp$num.limit) ^ 2))
+	tmp$bottom$labels$at <- tmp$bottom$ticks$at
+	tmp$bottom$labels$labels <- format(tmp$bottom$labels$at ^ 2)
+	return(tmp)
+}
+
+
 lattice.y.prettylog <- function(lim, ...) {
 	arglist <- list(...)
 	have.log <- (!is.null(arglist$logsc)) && (!identical(arglist$logsc, F))

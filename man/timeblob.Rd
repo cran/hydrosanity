@@ -8,7 +8,7 @@
   ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-timeblob(Time, Data, Qual = NULL, extras = NULL, timestep = NULL, sitename = "Unknown", dataname = "Data")
+timeblob(Time, Data, Qual = NULL, extras = NULL, timestep = NULL, sitename = "Unknown", dataname = "Data", role = "OTHER")
 
 is.timeblob(x)
 
@@ -23,6 +23,7 @@ sapply.timeblob.data(blob.list, FUN, ...)
   \item{timestep}{ ~~Describe \code{timestep} here~~ }
   \item{sitename}{ ~~Describe \code{sitename} here~~ }
   \item{dataname}{ ~~Describe \code{dataname} here~~ }
+  \item{role}{ ~~Describe \code{role} here~~ }
   \item{x}{ ~~Describe \code{x} here~~ }
   \item{blob.list}{ ~~Describe \code{blob.list} here~~ }
   \item{FUN}{ ~~Describe \code{FUN} here~~ }

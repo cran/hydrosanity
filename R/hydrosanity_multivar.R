@@ -20,7 +20,7 @@ updateMultivarPage <- function() {
 }
 
 .hs_on_multivar_relationplot_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -113,7 +113,7 @@ updateMultivarPage <- function() {
 }
 
 .hs_on_multivar_lagseries_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -122,51 +122,64 @@ updateMultivarPage <- function() {
 		return()
 	}
 	nBlobs <- length(selNames)
+	lagMax <- theWidget("multivar_lag_max_spinbutton")$getValue()
 	doRises <- theWidget("multivar_corr_flowrises_checkbutton")$getActive()
 	flowName <- theWidget("multivar_flowblob_combobox")$getActiveText()
 	if (is.null(flowName)) {
 		errorDialog("No flow item was selected.")
 		return()
 	}
-	selNames <- c(flowName, selNames)
+	
+	addLogComment("Generate multivariate correlation lag plot")
 	
 	tmpObjs <- c('tmp.data')
-	guiDo(call=bquote(
-		tmp.data <- hsp$data[.(selNames)]
-	))
+	guiDo(call=bquote({
+		tmp.names <- .(selNames)
+		tmp.flowname <- .(flowName)
+		tmp.data <- hsp$data[tmp.names]
+	}))
 	
-	guiDo(call=bquote(
-		tmp.data <- sync.timeblobs(tmp.data, timelim=hsp$timePeriod)
-	))
+	guiDo(tmp.data <- sync.timeblobs(hsp$data[c(tmp.flowname, tmp.names)], 
+		timelim=hsp$timePeriod))
 	
 	if (doRises) guiDo(tmp.data[[2]] <- rises(tmp.data[[2]]))
 	
 	tmpObjs <- c(tmpObjs, 'tmp.lags', 'tmp.chunks', 'tmp.win', 'tmp.ccf')
-	guiDo(tmp.lags <- numeric(0))
-	guiDo(call=bquote(
+	guiDo(call=bquote({
 		tmp.chunks <- seq(hsp$timePeriod[1], hsp$timePeriod[2], by="years")
-	))
-	for (i in seq_along(tmp.chunks)[-1]) {
-		guiDo(call=bquote({
-			tmp.win <- findIntervalRange(.(tmp.chunks[i-1]), 
-				.(tmp.chunks[i]), tmp.data$Time)
-			tmp.win <- seq(tmp.win[1], tmp.win[2])
-			tmp.ts <- try(na.contiguous(ts.intersect(as.ts(tmp.data[tmp.win,2]), 
-				as.ts(as.ts(tmp.data[tmp.win,3])))), silent=T)
-			if (inherits(tmp.ts, "try-error") || (nrow(tmp.ts) < 30)) {
-				tmp.lags[.(i)] <- NA
-			} else {
-				tmp.ccf <- ccf(tmp.ts[,1], tmp.ts[,2], plot=F)
-				tmp.ccf
-				tmp.lags[.(i)] <- tmp.ccf$lag[which.max(tmp.ccf$acf)]
-			}
-		}))
-	}
-	
-	plot.call <- quote(xyplot(tmp.lags ~ tmp.chunks, type="s", panel=function(...) {
-		panel.abline(h=0)
-		panel.xyplot(...)
+		tmp.dimnames <- list(lag=.(-lagMax):.(lagMax), time=tmp.chunks, site=tmp.names)
+		tmp.mush <- array(NA_real_, dim=c(.(lagMax)*2+1, length(tmp.chunks), length(tmp.names)),
+			dimnames=tmp.dimnames)
+		tmp.mushgrid <- do.call(expand.grid, tmp.dimnames)
 	}))
+	guiDo(call=bquote({
+		for (i in seq_along(tmp.chunks)) {
+			tmp.win <- findIntervalRange(tmp.chunks[i], 
+				incr.POSIXt(tmp.chunks[i], "years"), tmp.data$Time)
+			tmp.win <- seq(tmp.win[1], tmp.win[2])
+			tmp.newlags <- lapply(as.data.frame(tmp.data[tmp.win,-(1:2)]), 
+			function(x) {
+				tmp.ccf <- try(ccf(tmp.data[tmp.win,2], x, 
+					lag.max=.(lagMax), na.action=na.contiguous, 
+					plot=F), silent=T)
+				if (inherits(tmp.ccf, "try-error") || 
+					(tmp.ccf$n.used < 30))
+					return(NA)
+				return(tmp.ccf$acf)
+			})
+			tmp.newlags <- as.data.frame(tmp.newlags)
+			tmp.mush[,i,] <- unlist(tmp.newlags)
+		}
+	}))
+	guiDo(tmp.mushgrid$value <- as.vector(tmp.mush))
+	guiDo(tmp.mushgrid$value <- pmax(tmp.mushgrid$value, 0))
+	
+	plot.call <- quote(levelplot(value ~ time * lag | site, data=tmp.mushgrid))
+	plot.call$at <- quote(0:10/10)
+	plot.call$layout <- c(1, min(5, length(tmp.names)))
+	plot.call$strip <- quote(F)
+	plot.call$strip.left <- quote(T)
+	plot.call$ylim <- extendrange(c(-1, lagMax))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
 	guiDo(playwith(plot.call=plot.call, name="lag over time", 

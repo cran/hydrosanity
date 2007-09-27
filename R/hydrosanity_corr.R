@@ -8,7 +8,7 @@ updateCorrPage <- function() {
 }
 
 .hs_on_corr_ccfplot_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -26,7 +26,7 @@ updateCorrPage <- function() {
 	addLogComment("Generate cross-correlation plot")
 	
 	whichFlow <- which(sapply(hsp$data[selNames], attr, "role") == "FLOW")
-	whichRain <- which(sapply(hsp$data[selNames], attr, "role") == "RAIN")
+	whichRain <- which(sapply(hsp$data[selNames], attr, "role") %in% c("RAIN","AREAL"))
 	# do we have a pair consisting of rainfall and flow?
 	isPQ <- (length(whichFlow) == 1) && (length(whichRain) == 1)
 	# make sure it is in standard order in dataframe: flow then rain
@@ -106,7 +106,7 @@ updateCorrPage <- function() {
 }
 
 .hs_on_corr_relationplot_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -135,7 +135,7 @@ updateCorrPage <- function() {
 	addLogComment("Generate rainfall-runoff relationship plot")
 	
 	whichFlow <- which(sapply(hsp$data[selNames], attr, "role") == "FLOW")
-	whichRain <- which(sapply(hsp$data[selNames], attr, "role") == "RAIN")
+	whichRain <- which(sapply(hsp$data[selNames], attr, "role") %in% c("RAIN","AREAL"))
 	# do we have a pair consisting of rainfall and flow?
 	isPQ <- (length(whichFlow) == 1) && (length(whichRain) == 1)
 	# make sure it is in standard order in dataframe: flow then rain

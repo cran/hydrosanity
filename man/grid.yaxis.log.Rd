@@ -3,6 +3,8 @@
 \alias{grid.xaxis.log}
 \alias{lattice.y.prettylog}
 \alias{lattice.x.prettylog}
+\alias{lattice.y.sqrt}
+\alias{lattice.x.sqrt}
 \title{Log Scale Axis for Grid/Lattice}
 \description{
   ~~ A concise (1-5 lines) description of what the function does. ~~
@@ -13,6 +15,9 @@ grid.xaxis.log(logLim = as.numeric(convertX(unit(c(0,1), "npc"), "native")), lab
 
 lattice.y.prettylog(lim, ...)
 lattice.x.prettylog(lim, ...)
+
+lattice.y.sqrt(lim, ...)
+lattice.x.sqrt(lim, ...)
 }
 \arguments{
   \item{logLim}{ ~~Describe \code{logLim} here~~ }

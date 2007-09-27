@@ -3,7 +3,7 @@
 ## Copyright (c) 2007 Felix Andrews <felix@nfrac.org>, GPL
 
 
-timeblob <- function(Time, Data, Qual=NULL, extras=NULL, timestep=NULL, sitename="Unknown", dataname="Data") {
+timeblob <- function(Time, Data, Qual=NULL, extras=NULL, timestep=NULL, sitename="Unknown", dataname="Data", role="OTHER") {
 	# check types
 	Time <- as.POSIXct(Time)
 	if (any(is.na(Time))) { stop("'Time' must be a vector of valid times (POSIXt)") }
@@ -39,7 +39,7 @@ timeblob <- function(Time, Data, Qual=NULL, extras=NULL, timestep=NULL, sitename
 	attr(blob, "timestep") <- timestep
 	attr(blob, "sitename") <- sitename
 	attr(blob, "dataname") <- dataname
-	attr(blob, "role") <- "OTHER"
+	attr(blob, "role") <- role
 	# check that it is.timeblob()!
 	if (!is.timeblob(blob)) { stop("oops, timeblob() function made an invalid timeblob") }
 	return(blob)
@@ -73,7 +73,11 @@ sapply.timeblob.data <- function(blob.list, FUN, ...) {
 	sapply(lapply(blob.list, function(x) x$Data), FUN, ...)
 }
 
-read.timeblob <- function(file, skip=1, sep=",", sitename=NULL, dataname="Data", dataCol=2, qualCol=3, extraCols=c(), extraNames=paste("Extra",extraCols), readTimesFromFile=T, timeCol=1, timeFormat="%d %b %Y", startTime=NA, tz="GMT", timeSeqBy="days", ...) {
+read.timeblob <- function(file, skip=1, sep=",", sitename=NULL, dataname="Data", 
+	dataCol=2, qualCol=3, extraCols=c(), extraNames=paste("Extra",extraCols), 
+	readTimesFromFile=T, timeCol=1, timeFormat="%d %b %Y", startTime=NA, 
+	tz="GMT", timeSeqBy="days", timeOffset=NULL, ...) {
+	
 	# check types
 	if (is.null(sitename)) {
 		if (inherits(file, "connection")) {
@@ -82,6 +86,7 @@ read.timeblob <- function(file, skip=1, sep=",", sitename=NULL, dataname="Data",
 			sitename <- get.stem(file)
 		}
 	}
+	if (!is.null(timeOffset)) stopifnot(inherits(timeOffset, "difftime"))
 	if (!is.numeric(dataCol)) { stop("'dataCol' must be numeric (column number)") }
 	if (readTimesFromFile) {
 		if (!is.numeric(timeCol)) { stop("'timeCol' must be numeric (column number)") }
@@ -91,19 +96,25 @@ read.timeblob <- function(file, skip=1, sep=",", sitename=NULL, dataname="Data",
 			if (is.na(startTime)) { stop("could not convert 'startTime' to a time") }
 		}
 	}
-	# unz seems to have problems, so just read in the whole file
-	if (inherits(file, "unz")) { 
-		fileText <- readLines(file)
-		close(file)
-		file <- textConnection(fileText)
-	}
 	# make sure extra column names correspond to given columns
 	length(extraNames) <- length(extraCols)
 	extraNames[is.na(extraNames)] <- paste("Extra", which(is.na(extraNames)))
 	# number of columns in file
 	fileCols <- 200 # assumed maximum
-	if (!inherits(file, "unz")) { #isSeekable(file)) {
-		firstLine <- read.table(file, header=F, skip=skip, sep=sep, strip.white=T, nrows=1, ...)
+	# unz seems to have problems, so just read in the whole file
+	if (inherits(file, "unz")) { 
+		fileText <- readLines(file)
+		close(file)
+		file <- textConnection(fileText)
+		firstLine <- read.table(file, header=F, skip=skip, sep=sep, 
+			strip.white=T, nrows=1, ...)
+		fileCols <- ncol(firstLine)
+		# reset the connection
+		file <- textConnection(fileText)
+	}
+	if (is.character(file) || isSeekable(file)) {
+		firstLine <- read.table(file, header=F, skip=skip, sep=sep, 
+			strip.white=T, nrows=1, ...)
 		fileCols <- ncol(firstLine)
 	}
 	if (dataCol > fileCols) {
@@ -121,7 +132,8 @@ read.timeblob <- function(file, skip=1, sep=",", sitename=NULL, dataname="Data",
 	fileColClasses[qualCol] <- NA # note qualCol may be NULL
 	fileColClasses[extraCols] <- NA # note extraCols may be NULL
 	# read file
-	rawData <- read.table(file, header=F, skip=skip, sep=sep, colClasses=fileColClasses, strip.white=T, ...)
+	rawData <- read.table(file, header=F, skip=skip, sep=sep, 
+		colClasses=fileColClasses, strip.white=T, ...)
 	# work out which column of rawData has the data (from dataCol)
 	dataIndex <- dataCol - sum(fileColClasses[1:dataCol]=="NULL", na.rm=T)
 	qualIndex <- NULL
@@ -164,6 +176,7 @@ read.timeblob <- function(file, skip=1, sep=",", sitename=NULL, dataname="Data",
 		}
 		myTime <- seq.POSIXt(from=startTime, by=timeSeqBy, length=nrow(rawData))
 	}
+	if (!is.null(timeOffset)) myTime <- myTime + as.numeric(timeOffset, units="secs")
 	extras <- rawData[-c(timeIndex, dataIndex, qualIndex)]
 	names(extras) <- extraNames
 	blob <- timeblob(Time=myTime, Data=rawData[[dataIndex]], Qual=myQual, 
@@ -576,9 +589,10 @@ quick.disaccumulate.timeblob <- function(blob) {
 		blob$AccumSteps <- NULL
 		return(blob)
 	}
+	spanInfo$accum <- blob$Data[spanInfo$end]
 	spanInfo$length <- blob$AccumSteps[spanInfo$end]
 	spanInfo$start <- with(spanInfo, end - length + 1)
-	spanInfo$accum <- blob$Data[spanInfo$end]
+	spanInfo <- spanInfo[spanInfo$start > 0,]
 	# concatenated indices of all the time steps in accums
 	allSpans <- expand.indices(spanInfo)
 	# evenly redistribute
@@ -593,6 +607,7 @@ impute.timeblobs <- function(blob.list, which.impute=names(blob.list), timelim=N
 	# check types
 	if (!identical(class(blob.list),"list")) { blob.list <- list(blob.list) }
 	if (any(sapply(blob.list, is.timeblob)==F)) { stop("'blob.list' must be a list of timeblobs") }
+	stopifnot(which.impute %in% names(blob.list))
 	if (!is.null(timelim)) {
 		timelim <- as.POSIXct(timelim)
 		if (any(is.na(timelim))) { stop("'timelim' must be a pair of valid times (POSIXt)") }
@@ -859,10 +874,12 @@ imputeGaps.timeblobs <- function(blob.list, which.impute=names(blob.list), type=
 		if (("disaccumulated" %in% type) && (nrow(spanInfo) > 0)) {
 			spanInfo$length <- impBlob$AccumSteps[spanInfo$end]
 			spanInfo$start <- with(spanInfo, end - length + 1)
+			spanInfo <- spanInfo[spanInfo$start > 0,]
 			# drop any gaps which were not completely imputed
 			cumNAs <- cumsum(is.na(impBlob$Imputed))
 			spanNAs <- with(spanInfo, cumNAs[end] -
-				ifelse(start==0, 0, cumNAs[start-1]))
+				c(ifelse(start[1]==0, 0, start[1]), cumNAs[start[-1]-1]))
+				#ifelse(start<=0, 0, cumNAs[start-1]))
 			ok <- (spanNAs == 0)
 			spanInfo <- spanInfo[ok,]
 			# get known (observed) totals
@@ -870,8 +887,11 @@ imputeGaps.timeblobs <- function(blob.list, which.impute=names(blob.list), type=
 			# work out sum of imputed values in each gap
 			cumSum <- cumsum(ifelse(is.na(impBlob$Imputed), 0, 
 				impBlob$Imputed))
-			spanInfo$sum <- cumSum[spanInfo$end] - 
-				ifelse(spanInfo$start==0, 0, cumSum[spanInfo$start-1])
+			spanInfo$sum <- with(spanInfo, cumSum[end] - 
+				c(ifelse(start[1]==0, 0, start[1]), cumSum[start[-1]-1]))
+			# check for imputed sums equal to zero
+			zeroSums <- (spanInfo$sum == 0)
+			if (any(zeroSums)) spanInfo <- spanInfo[!zeroSums,]
 			# concatenated indices of all the time steps in accums
 			allSpans <- expand.indices(spanInfo)
 			allSpansOrig <- allSpans + lim[1] - 1
@@ -882,15 +902,17 @@ imputeGaps.timeblobs <- function(blob.list, which.impute=names(blob.list), type=
 				with(spanInfo, rep(accum / sum, times=length))
 			blob.list[[x]]$Qual[allSpansOrig] <- "disaccumulated"
 			blob.list[[x]]$AccumSteps[allSpansOrig] <- 1
+			# disaccumulate uniformly if can't impute
 			if (fallBackToConstantDisaccum) {
 				constBlob <- quick.disaccumulate.timeblob(
 					window(blob.list[[x]], start(impBlob), end(impBlob)))
 				blobWindow <- seq(lim[1], lim[2])
 				blob.list[[x]]$Data[blobWindow] <- constBlob$Data
 				blob.list[[x]]$Qual[blobWindow] <- constBlob$Qual
+				blob.list[[x]]$AccumSteps[blobWindow] <- 1
 			}
 			# remove AccumSteps column if no longer relevant
-			if (!any(blob.list[[x]]$AccumSteps > 0)) {
+			if (!any(blob.list[[x]]$AccumSteps > 1, na.rm=T)) {
 				blob.list[[x]]$AccumSteps <- NULL
 			}
 		}
@@ -981,8 +1003,7 @@ unimputeGaps.timeblobs <- function(blob.list, timelim=NULL, type=c("imputed", "d
 		blob.list[[x]]$Qual <- blob.list[[x]]$Qual[,drop=T]
 	}
 	
-	# contract series (drop NAs at start or end) to reverse 'extend=T'
-	# TODO
+	# TODO contract series (drop NAs at start or end) to reverse 'extend=T'
 	
 	return(blob.list)
 }

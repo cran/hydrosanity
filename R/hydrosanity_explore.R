@@ -8,7 +8,7 @@ updateExplorePage <- function() {
 }
 
 .hs_on_explore_timeseries_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -174,7 +174,7 @@ updateExplorePage <- function() {
 }
 
 .hs_on_explore_cdf_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
@@ -311,7 +311,7 @@ updateExplorePage <- function() {
 }
 
 .hs_on_explore_seasonal_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))

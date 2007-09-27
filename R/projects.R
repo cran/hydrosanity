@@ -26,13 +26,13 @@ openProject <- function(filename=NULL) {
 	hsp$projectFile <<- filename
 	StateEnv$win['title'] <- paste("Hydrosanity:", get.stem(filename))
 	
+	if (!is.null(hsp$core_log)) { # this was in version 0.8.64
+		hsp$log <<- hsp$core_log
+		hsp$core_log <<- NULL
+	}
 	setTextview(theWidget("log_textview"), hsp$log)
-	if (is.null(hsp$core_log))
-		hsp$core_log <<- "== Project was saved without a core log. ==\n\n"
-	setTextview(theWidget("core_log_textview"), hsp$core_log)
 	addLogSeparator()
 	hsp$log <<- NULL
-	hsp$core_log <<- NULL
 	
 	if (is.null(hsp$version) ||
 		package_version(hsp$version) < package_version("0.5")) {
@@ -104,11 +104,9 @@ saveProject <- function(filename=NULL, saveAs=F) {
 	}
 	
 	hsp$log <<- getTextviewText(theWidget("log_textview"))
-	hsp$core_log <<- getTextviewText(theWidget("core_log_textview"))
 	hsp$version <<- VERSION
 	save(hsp, file=filename, compress=TRUE)
 	hsp$log <<- NULL
-	hsp$core_log <<- NULL
 	hsp$version <<- NULL
 	hsp$modified <<- F
 	hsp$projectFile <<- filename

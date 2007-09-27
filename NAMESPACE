@@ -12,6 +12,7 @@ export(
 
 ## spatial_functions.R
 export(
+	panel.levelplot.mosaic,
 	panel.levelplot.interp,
 	panel.contourplot.interp,
 	panel.worldmap,
@@ -21,7 +22,7 @@ export(
 	sqrtPalette,
 	sqrtPretty,
 	arealSubPolygons,
-	readGDAL_FLTfix
+	readGDAL_fixed
 )
 	
 ## timeblob_plots.R
@@ -35,6 +36,8 @@ export(
 	hydrosanity.caption,
 	grid.yaxis.log,
 	grid.xaxis.log,
+	lattice.y.sqrt,
+	lattice.x.sqrt,
 	lattice.y.prettylog,
 	lattice.x.prettylog,
 	grid.xaxis.POSIXt,

@@ -8,27 +8,21 @@ updateRainPage <- function() {
 }
 
 .hs_on_rain_view_surface_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
-	if (length(selNames) == 0) {
-		errorDialog("No items selected.")
-		return()
-	}
-	if (length(selNames) < 4) {
-		errorDialog("Select at least 4 items.")
+	if (length(selNames) < 2) {
+		errorDialog("First, select some items to display (more than one).")
 		return()
 	}
 	nBlobs <- length(selNames)
 	
-	doOverall <- theWidget("rain_surface_overall_radiobutton")$getActive()
+	doRaw <- theWidget("rain_surface_raw_radiobutton")$getActive()
+	doAnnual <- theWidget("rain_surface_annual_radiobutton")$getActive()
 	doQuarters <- theWidget("rain_surface_quarters_radiobutton")$getActive()
 	doMonths <- theWidget("rain_surface_months_radiobutton")$getActive()
-	doAnnual <- theWidget("rain_surface_annual_radiobutton")$getActive()
-	doRaw <- theWidget("rain_surface_raw_radiobutton")$getActive()
-	doLinear <- theWidget("rain_linear_radiobutton")$getActive()
-	doExtrap <- theWidget("rain_spline_extrap_radiobutton")$getActive()
+	doOverall <- theWidget("rain_surface_overall_radiobutton")$getActive()
 	
 	myType <- if (doOverall) "overall" else
 		if (doAnnual) "annual" else
@@ -46,7 +40,7 @@ updateRainPage <- function() {
 		return()
 	}
 	
-	addLogComment("Generate rainfall map")
+	addLogComment("Generate rainfall mosaic plot")
 	
 	tmpObjs <- c('tmp.names')
 	
@@ -66,8 +60,18 @@ updateRainPage <- function() {
 	
 	if (doRaw) {
 		tmpObjs <- c(tmpObjs, 'tmp.range')
+		if (any(sapply(tmp.data, function(x) 
+			any(x$AccumSteps > 1, na.rm=T) ))) {
+			if (is.null(questionDialog("It is recommended that you ",
+				"disaccumulate the data first, as it makes this ",
+				"plot easier to understand. You can do this from ",
+				"the Impute tab. Continue anyway?"))) {
+					StateEnv$win$present()
+					return()
+			}
+			StateEnv$win$present()
+		}
 		guiDo({
-			# disaccumulate?
 			tmp.data <- sync.timeblobs(tmp.data)
 			tmp.range <- range(unlist(tmp.data[-1]), finite=T)
 		})
@@ -136,17 +140,18 @@ updateRainPage <- function() {
 	plot.call$aspect <- "iso"
 	plot.call$as.table <- if (!doOverall) T
 	
-	plot.call$panel <- function(x, y, z, subscripts, at, col.regions=regions$col,
-		linear=F, extrap=F) {
+	plot.call$panel <- function(x, y, z, subscripts, at, col.regions=regions$col) {
 		x <- x[subscripts]
 		y <- y[subscripts]
 		z <- z[subscripts]
-		if (sum(!is.na(z)) >= 4) {
+		if (sum(!is.na(z)) >= 1) {
 			regions <- trellis.par.get("regions")
-			panel.levelplot.interp(x, y, z, at=at, 
-				col.regions=col.regions, linear=linear, extrap=extrap)
+			panel.levelplot.mosaic(x, y, z, at=at, 
+				col.regions=col.regions)
+			if (FALSE) panel.levelplot.interp(x, y, z, at=at, 
+				col.regions=col.regions, linear=F, extrap=T)
 			if (FALSE) panel.contourplot.interp(x, y, z, 
-				at=sqrtPretty(at), linear=linear, extrap=extrap)
+				at=sqrtPretty(at), linear=F, extrap=T)
 		}
 		panel.worldmap()
 		panel.rivers()
@@ -154,10 +159,8 @@ updateRainPage <- function() {
 		if (!is.null(hsp$catchment))
 			sp.polygons(hsp$catchment)
 		panel.points(x, y, pch=ifelse(is.na(z), 4, 21))
-		#if (FALSE) panel.text(x, y, labels=row.names(points.xy))
+		#if (FALSE) panel.text(x, y, labels=row.names(points.xy)) TODO
 	}
-	plot.call$linear <- doLinear
-	plot.call$extrap <- if (doExtrap) T
 	
 	if (!is.null(hsp$region)) {
 		plot.call$xlim <- quote(hsp$region$xlim)
@@ -168,7 +171,7 @@ updateRainPage <- function() {
 	
 	myExtras <- if (doRaw) list("index")
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="rainfall map", 
+	guiDo(playwith(plot.call=plot.call, name="rainfall mosaic", 
 		extra.buttons=myExtras, 
 		labels=rownames(tmp.locs),
 		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
@@ -178,11 +181,11 @@ updateRainPage <- function() {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
 	}
 	
-	setStatusBar("Generated rainfall map")
+	setStatusBar("Generated rainfall mosiac plot")
 }
 
 .hs_on_rain_view_grids_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	filePattern <- theWidget("rain_grid_files_pattern_entry")$getText()
@@ -196,10 +199,12 @@ updateRainPage <- function() {
 	
 	tmpObjs <- c()
 	
+	guiDo(library(rgdal))
+	
 	if (!yearsVary && !monthsVary) {
 		tmpObjs <- c(tmpObjs, "tmp.grid")
 		guiDo(call=bquote(
-			tmp.grid <- readGDAL_FLTfix(.(filePattern))
+			tmp.grid <- readGDAL_fixed(.(filePattern))
 		))
 		plot.call <- quote(
 			levelplot(band1 ~ x * y, data=as(tmp.grid, "data.frame"))
@@ -216,7 +221,7 @@ updateRainPage <- function() {
 		}))
 		
 		plot.call <- bquote(
-			spplot(readGDAL_FLTfix(format(tmp.times[gui.index], .(filePattern))), 
+			spplot(readGDAL_fixed(format(tmp.times[gui.index], .(filePattern))), 
 				formula=band1~x*y | format(tmp.times[gui.index], 
 				.(if (monthsVary) "%Y" else "%Y %b")))
 		)
@@ -226,7 +231,7 @@ updateRainPage <- function() {
 				.(if (monthsVary) "%Y %b" else "%Y")), 
 				data={
 					fname <- .(filePattern)
-					myGrid <- readGDAL_FLTfix(format(tmp.times[gui.index], fname))
+					myGrid <- readGDAL_fixed(format(tmp.times[gui.index], fname))
 					as(myGrid, "data.frame")
 				})
 		)
@@ -297,14 +302,14 @@ updateRainPage <- function() {
 	guiDo({
 		tmp.data <- 0
 		for (i in seq_along(tmp.times)) {
-			myGrid <- try(readGDAL_FLTfix(format(tmp.times[i], tmp.fname)))
+			myGrid <- try(readGDAL_fixed(format(tmp.times[i], tmp.fname)))
 			if (inherits(myGrid, "try-error")) tmp.data[i] <- NA
 			else tmp.data[i] <- overlay(as(myGrid, "SpatialPointsDataFrame"),
 				hsp$catchment, fn=mean)[,1]
 		}
 	})
 	
-	guiDo(hsp$data[["areal.grids"]] <- timeblob(Time=tmp.times, Data=tmp.data))
+	guiDo(hsp$data[["areal.grids"]] <- timeblob(Time=tmp.times, Data=tmp.data, role="AREAL"))
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
@@ -316,16 +321,12 @@ updateRainPage <- function() {
 }
 
 .hs_on_rain_view_mosaic_button_clicked <- function(button) {
-	freezeGUI(use.core.log=F)
+	freezeGUI(echo.to.log=F)
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
-	if (length(selNames) == 0) {
-		errorDialog("No items selected.")
-		return()
-	}
 	if (length(selNames) < 2) {
-		errorDialog("Select at least 2 items.")
+		errorDialog("First, select some items to display (more than one).")
 		return()
 	}
 	nBlobs <- length(selNames)
@@ -345,7 +346,7 @@ updateRainPage <- function() {
 		return()
 	}
 	
-	addLogComment("Generate Voronoi mosaic")
+	addLogComment("Generate Thiessen polygons")
 	
 	tmpObjs <- c('tmp.names')
 	
@@ -388,7 +389,7 @@ updateRainPage <- function() {
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="Voronoi mosaic", 
+	guiDo(playwith(plot.call=plot.call, name="Thiessen polygons", 
 		extra.buttons=NULL,
 		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
 		doLog=F)
@@ -397,7 +398,7 @@ updateRainPage <- function() {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
 	}
 	
-	setStatusBar("Generated Voronoi mosaic plot")
+	setStatusBar("Generated Thiessen polygons plot")
 }
 
 .hs_on_rain_mosaic_make_areal_button_clicked <- function(button) {
@@ -405,12 +406,8 @@ updateRainPage <- function() {
 	on.exit(thawGUI())
 	
 	selNames <- iconViewGetSelectedNames(theWidget("selection_iconview"))
-	if (length(selNames) == 0) {
-		errorDialog("No items selected.")
-		return()
-	}
 	if (length(selNames) < 2) {
-		errorDialog("Select at least 2 items.")
+		errorDialog("First, select some items to work with (more than one).")
 		return()
 	}
 	nBlobs <- length(selNames)
@@ -425,7 +422,7 @@ updateRainPage <- function() {
 	
 	if (!yearsVary) { toYear <- fromYear }
 	
-	if (!yearsVary && !monthsVary) {
+	if (doByGrids && !yearsVary && !monthsVary) {
 		errorDialog("Only one grid was specified. This is not supported (yet).")
 		return()
 	}
@@ -445,7 +442,7 @@ updateRainPage <- function() {
 		return()
 	}
 	
-	addLogComment("Generate areal rainfall from Voronoi mosaic")
+	addLogComment("Generate areal rainfall from Thiessen polygons")
 	
 	tmpObjs <- c('tmp.names')
 	
@@ -495,7 +492,7 @@ updateRainPage <- function() {
 		guiDo({
 			tmp.gridvals <- list()
 			for (i in seq_along(tmp.gridtime)) {
-				myGrid <- try(readGDAL_FLTfix(format(tmp.gridtime[i], tmp.fname)))
+				myGrid <- try(readGDAL_fixed(format(tmp.gridtime[i], tmp.fname)))
 				tmp.gridvals[[i]] <- if (inherits(myGrid, "try-error")) NA
 					else overlay(as(myGrid, "SpatialPointsDataFrame"),
 						tmp.subPolys, fn=mean)[,1]
@@ -514,6 +511,9 @@ updateRainPage <- function() {
 			
 			# scale each month of the gauge data so month sum equal to grid value
 			for (i in seq_along(tmp.monthdata)) {
+				# replace zeros with -1 (arbitrary) to avoid Inf
+				tmp.monthdata[[i]] <- ifelse(tmp.monthdata[[i]] == 0, 
+					-1, tmp.monthdata[[i]])
 				tmp.scale[[i]] <- tmp.gridvals[[i]] / tmp.monthdata[[i]]
 			}
 			
@@ -528,7 +528,7 @@ updateRainPage <- function() {
 	# compute areal (area-weighted) time series
 	guiDo({
 		tmp.areal <- apply(tmp.sync, ROWS<-1, weighted.mean, w=tmp.areaFrac)
-		hsp$data[["areal.weighted"]] <- timeblob(Time=tmp.synctime, Data=tmp.areal)
+		hsp$data[["areal.weighted"]] <- timeblob(Time=tmp.synctime, Data=tmp.areal, role="AREAL")
 	})
 	
 	# TODO: remove tmps

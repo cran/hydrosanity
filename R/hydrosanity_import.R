@@ -291,7 +291,7 @@ updateImportPage <- function() {
 		if (is.null(myElev)) { myElev <- NA }
 		dfElev[k] <- myElev
 	}
-	#dfRole <- factor(dfRole, levels=c("RAIN", "FLOW", "OTHER"))
+	#dfRole <- factor(dfRole, levels=c("RAIN", "AREAL", "FLOW", "OTHER"))
 	
 	metadata <- data.frame(
 		SiteID=dfID,
@@ -313,9 +313,9 @@ updateImportPage <- function() {
 	
 	maybeUpdate <- function(assign.expr, subs=list(i=eval(i,envir)), envir=parent.frame()) {
 		expr <- substitute(assign.expr)
+		force(expr)
 		oldval <- eval(expr[[2]], envir=envir)
 		newval <- eval(expr[[3]], envir=envir)
-		#print(expr)
 		#print(oldval)
 		#print(newval)
 		if (is.null(newval)) { return() }
@@ -671,7 +671,7 @@ updateImportPage <- function() {
 ## NON-ACTIONS, just interface bits and pieces
 
 setDataRole <- function(blobName, role=NULL, doLogComment=T) {
-	StateEnv$use.core.log <- T
+	StateEnv$echo.to.log <- T
 	
 	if (is.null(role)) {
 		if (one.step.acf(hsp$data[[blobName]]) > 0.5) {

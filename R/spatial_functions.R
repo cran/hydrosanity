@@ -21,6 +21,40 @@ panel.layers <- function(x, y, ..., layers=list()) {
 	}
 }
 
+panel.levelplot.mosaic <- function(x, y, z, subscripts=T, 
+	at=seq(min(z, na.rm=T), max(z, na.rm=T), length=100), col.regions=regions$col) {
+	# draw Voronoi mosaic
+	#require(grid)
+	stopifnot(require(tripack))
+	xlim <- convertX(unit(0:1,"npc"), "native", valueOnly=T)
+	ylim <- convertY(unit(0:1,"npc"), "native", valueOnly=T)
+	# only interpolate with sites in twice visible range
+	xlim.use <- xlim + diff(xlim) * c(-0.5, 0.5)
+	ylim.use <- ylim + diff(ylim) * c(-0.5, 0.5)
+	# find subset of points to use
+	ok <- ((min(xlim.use) < x) & (x < max(xlim.use)) &
+		(min(ylim.use) < y) & (y < max(ylim.use)))
+	ok <- ok & (subscripts %in% seq_along(x))
+	ok <- ok & complete.cases(x, y, z)
+	if (sum(ok) == 0) return() # warn?
+	x <- x[ok]
+	y <- y[ok]
+	z <- z[ok]
+	xy <- xy.coords(x, y)
+	xy <- data.frame(x=xy$x, y=xy$y)
+	# add dummy points to ensure that voronoi polygons are finite
+	dummies <- data.frame(x=c(-1,-1,1,1), y=c(-1,1,-1,1)) * 10 * max(abs(xy))
+	xy <- rbind(xy, dummies)
+	# calculate voronoi mosaic
+	vpolys <- voronoi.polygons(voronoi.mosaic(xy, duplicate="remove"))
+	# draw it as one composite polygon
+	polydata <- do.call('rbind', vpolys)
+	regions <- trellis.par.get("regions")
+	zcol <- level.colors(z, at, col.regions, colors = TRUE)
+	grid.polygon(polydata[,1], polydata[,2], id.lengths=sapply(vpolys, nrow),
+		default.units="native", gp=gpar(fill=zcol, col="transparent"))
+}
+
 panel.contourplot.interp <- function(..., contour=T, region=F) {
 	panel.levelplot.interp(..., contour=contour, region=region)
 }
@@ -28,6 +62,7 @@ panel.contourplot.interp <- function(..., contour=T, region=F) {
 panel.levelplot.interp <- function(x, y, z, subscripts=T, xo.length=40, yo.length=xo.length, 
 	linear=T, extrap=F, contour=F, region=T, at, ...) {
 	# draw interpolated grid
+	#require(grid)
 	stopifnot(require(akima))
 	xlim <- convertX(unit(0:1,"npc"), "native", valueOnly=T)
 	ylim <- convertY(unit(0:1,"npc"), "native", valueOnly=T)
@@ -39,7 +74,10 @@ panel.levelplot.interp <- function(x, y, z, subscripts=T, xo.length=40, yo.lengt
 		(min(ylim.use) < y) & (y < max(ylim.use)))
 	ok <- ok & (subscripts %in% seq_along(x))
 	ok <- ok & complete.cases(x, y, z)
-	if (sum(ok) < 4) stop("at least 4 locations are required for interpolation")
+	if (sum(ok) < 4) {
+		warning("at least 4 locations are required for interpolation")
+		return()
+	}
 	# construct marginal dimensions of grid
 	xo <- seq(min(xlim), max(xlim), length=xo.length)
 	yo <- seq(min(ylim), max(ylim), length=yo.length)
@@ -56,14 +94,15 @@ panel.levelplot.interp <- function(x, y, z, subscripts=T, xo.length=40, yo.lengt
 	myAt <- if (contour) pretty(z) else
 		seq(min(z, na.rm=T), max(z, na.rm=T), length=100)
 	if (diff(range(myAt)) == 0) myAt <- c(myAt[1], myAt[1] + 1)
-	if (!missing(at)) myAt <- at
+	if (missing(at)) at <- myAt
 	with(tmp.grid,
 		panel.levelplot(x, y, z, subscripts=subscripts, 
-			contour=contour, region=region, at=myAt, ...))
+			contour=contour, region=region, at=at, ...))
 }
 
 panel.worldmap <- function(col="black", ...) {
 	# draw map lines for national borders and coastlines
+	#require(grid)
 	xlim <- convertX(unit(0:1,"npc"), "native", valueOnly=T)
 	ylim <- convertY(unit(0:1,"npc"), "native", valueOnly=T)
 	if (require(mapdata, quietly=T)) {
@@ -90,6 +129,7 @@ panel.worldmap <- function(col="black", ...) {
 
 panel.rivers <- function(col="blue", lty="longdash", ...) {
 	# draw lines for major rivers
+	#require(grid)
 	xlim <- convertX(unit(0:1,"npc"), "native", valueOnly=T)
 	ylim <- convertY(unit(0:1,"npc"), "native", valueOnly=T)
 	if (require(maps, quietly=T)) {
@@ -102,6 +142,7 @@ panel.rivers <- function(col="blue", lty="longdash", ...) {
 
 panel.cities <- function(pch=15, col="black", ...) {
 	# draw cities
+	#require(grid)
 	stopifnot(require(maps))
 	xlim <- convertX(unit(0:1,"npc"), "native", valueOnly=T)
 	ylim <- convertY(unit(0:1,"npc"), "native", valueOnly=T)
@@ -112,9 +153,14 @@ panel.cities <- function(pch=15, col="black", ...) {
 		if (any(ok)) {
 			if (sum(ok) < 25) panel.points(long[ok], lat[ok], 
 				pch=pch, col=col, ...)
-			foo <- grid.grabExpr(panel.text(long[ok], lat[ok], 
-				name[ok], pos=1, col=col, ...))
-			grid.draw(editGrob(foo, ".", grep=T, check.overlap=T))
+			ux <- unit(long[ok], "native")
+			uy <- unit(lat[ok], "native")
+			grid.text(name[ok], ux, uy + unit(0.5, "char"), 
+				just="top", check.overlap=T,
+				gp=gpar(col=col, ...))
+			#foo <- grid.grabExpr(panel.text(long[ok], lat[ok], 
+			#	name[ok], pos=1, col=col, ...))
+			#grid.draw(editGrob(foo, ".", grep=T, check.overlap=T))
 		}
 	})
 }
@@ -176,9 +222,27 @@ subGrid <- function(grid, xlim=NULL, ylim=NULL, inclusive=F) {
 	grid[win[[2]], win[[1]]]
 }
 
-arealSubPolygons <- function(x, y=NULL, IDs=row.names(x), boundary, min.area.pct=0.5) {
-	require(gpclib)
+notInterp <- function(x, y, z, xo=seq(min(x), max(x), length = 40),
+	yo=seq(min(y), max(y), length = 40)) {
 	require(tripack)
+	xy <- xy.coords(x, y)
+	stopifnot(length(z) == length(xy$x))
+	xy <- data.frame(x=xy$x, y=xy$y)
+	# add dummy points to ensure that voronoi polygons are finite
+	dummies <- data.frame(x=c(-1,-1,1,1), y=c(-1,1,-1,1)) * 10 * max(abs(xy))
+	xy <- rbind(xy, dummies)
+	# calculate voronoi mosaic
+	vpolys <- voronoi.polygons(voronoi.mosaic(xy))
+	sps <- as.SpatialPolygons.voronoi.polygons(vpolys, IDs=seq_along(z))
+	# find polygon (hence z value) for each point in xo * yo grid
+	hits <- overlay(SpatialPoints(expand.grid(x=xo,y=yo)), sps)
+	zz <- matrix(z[hits], nrow=length(xo), ncol=length(yo))
+	list(x=xo, y=yo, z=zz)
+}
+
+arealSubPolygons <- function(x, y=NULL, IDs=row.names(x), boundary, min.area.pct=0.5) {
+	stopifnot(require(tripack))
+	stopifnot(require(gpclib))
 	xy <- xy.coords(x, y)
 	stopifnot(length(IDs) == length(xy$x))
 	xy <- data.frame(x=xy$x, y=xy$y)
@@ -220,7 +284,17 @@ as.Polygons.gpc.poly <- function(x, ID) {
 	Polygons(thisPolys, ID)
 }
 
-readGDAL_FLTfix <- function(fname, ...) {
+as.SpatialPolygons.voronoi.polygons <- function(x, IDs) {
+	thisSP <- list()
+	for (i in seq_along(x)) {
+		p <- x[[i]]
+		tmpPoly <- Polygon(rbind(p, p[1,]), hole=F)
+		thisSP[[i]] <- Polygons(list(tmpPoly), IDs[i])
+	}
+	SpatialPolygons(thisSP)
+}
+
+readGDAL_fixed <- function(fname, ...) {
 	if (get.extension(tolower(fname)) == "flt") {
 		foo <- readGDAL(fname, ...)
 		foo.dim <- gridparameters(foo)$cells.dim

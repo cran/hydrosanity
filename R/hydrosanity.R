@@ -1,15 +1,15 @@
 ## Hydrosanity: an interface for exploring hydrological time series in R
 ##
 ## Copyright (c) 2007 Felix Andrews <felix@nfrac.org>
-## based on Rattle (c) 2006 Graham.Williams@togaware.com
+## GUI based on Rattle (c) 2006 Graham.Williams@togaware.com
 ##
 
 MAJOR <- "0"
 MINOR <- "8"
-REVISION <- unlist(strsplit("$Revision: 64 $", split=" "))[2]
+REVISION <- unlist(strsplit("$Revision: 71 $", split=" "))[2]
 VERSION <- paste(MAJOR, MINOR, REVISION, sep=".")
 COPYRIGHT <- paste("(c) 2007 Felix Andrews <felix@nfrac.org>\n",
-	" based on Rattle (c) 2006 Graham.Williams@togaware.com")
+	" GUI based on Rattle (c) 2006 Graham.Williams@togaware.com")
 WEBSITE <- "http://hydrosanity.googlecode.com/"
 
 ## LICENSE
@@ -31,7 +31,7 @@ WEBSITE <- "http://hydrosanity.googlecode.com/"
 TIMESERIES.FORMATS <- list(
 	".au BoM daily rainfall"=
 		c('read.timeblob',
-		  'skip=1, sep=",", dataname="Rain (mm/day)", dataCol=6, qualCol=7, extraCols=c(9), extraNames=c("AccumSteps"), readTimesFromFile=F, startTime=list(year=3,month=4,day=5), timeSeqBy="DSTdays"'),
+		  'skip=1, sep=",", dataname="Rain (mm/day)", dataCol=6, qualCol=7, extraCols=c(9), extraNames=c("AccumSteps"), readTimesFromFile=F, startTime=list(year=3,month=4,day=5), timeSeqBy="DSTdays", timeOffset=as.difftime(9-24, units="hours")'),
 	".au NSW Pinneena v8 streamflow (ML/day, default time format)"=
 		c('read.timeblob',
 		  'skip=3, sep=",", dataname="Flow (ML/day)", timeFormat="%H:%M_%d/%m/%Y", na.strings=c(\'""\')')
@@ -39,10 +39,6 @@ TIMESERIES.FORMATS <- list(
 
 SITELIST.FORMATS <- list(
 	".au BoM daily rainfall"='select.sites.BOM.AU'
-)
-
-CATCHMENT.FORMATS <- list(
-	"ESRI shapefile"='readShapePoly'
 )
 
 # this stores application (non-project) state information
@@ -65,6 +61,9 @@ hydrosanity <- function(project = NULL) {
 		multivar=F,
 		corr=F
 	)
+	
+	StateEnv$echo.to.console <- T
+	StateEnv$echo.to.log <- T
 	
 	StateEnv$GUI <- gladeXMLNew(getpackagefile("hydrosanity.glade"),
 		root="hs_window")
@@ -113,13 +112,6 @@ hydrosanity <- function(project = NULL) {
 	theWidget("import_transform_ratio_timestep_comboboxentry")$setActive(3)
 	theWidget("export_time_format_comboboxentry")$setActive(0)
 	theWidget("export_time_format_codes_combobox")$setActive(0)
-	
-	catchment_format_combo <- theWidget("scope_catchment_format_combobox")
-	catchment_format_combo$getModel()$clear()
-	for (x in names(CATCHMENT.FORMATS)) {
-		catchment_format_combo$appendText(x)
-	}
-	catchment_format_combo$setActive(0)
 
 	sitelist_format_combo <- theWidget("scope_sitelist_format_combobox")
 	sitelist_format_combo$getModel()$clear()
@@ -149,7 +141,6 @@ hydrosanity <- function(project = NULL) {
 	theWidget("corr_relationplot_aggr2_comboboxentry")$setActive(4)
 	
 	setTextviewMonospace(theWidget("log_textview"))
-	setTextviewMonospace(theWidget("core_log_textview"))
 	setTextviewMonospace(theWidget("impute_textview"))
 	setTextviewMonospace(theWidget("corr_contiguous_textview"))
 	
@@ -161,7 +152,7 @@ hydrosanity <- function(project = NULL) {
 			Name=.hs_on_import_summary_treeview_sitename_edited,
 			Data=.hs_on_import_summary_treeview_dataname_edited,
 			Role=.hs_on_import_summary_treeview_role_edited),
-		combo=list(Role=data.frame(c("RAIN","FLOW","OTHER"))) )
+		combo=list(Role=data.frame(c("FLOW","RAIN","AREAL","OTHER"))) )
 	importTreeView$getSelection()$setMode("multiple")
 	try(importTreeView$setRubberBanding(T), silent=T) # not in 2.8.7
 	importTreeView$setRulesHint(T)
@@ -182,8 +173,14 @@ hydrosanity <- function(project = NULL) {
 }
 
 addInitialLogMessage <- function() {
-	addToLog(sprintf("## Hydrosanity version %s", VERSION), "\n",
-sprintf("## Run by %s on %s", Sys.info()["user"], R.version.string), "\n\n",
+	# don't echo this to the console
+	oldSetting <- StateEnv$echo.to.console
+	on.exit(StateEnv$echo.to.console <- oldSetting)
+	StateEnv$echo.to.console <- F
+	
+	addToLog(paste(
+"## Hydrosanity version", VERSION, "\n",
+"## Run by", Sys.info()["user"], "on", R.version.string, "\n\n",
 "## This log keeps a record of the analysis procedure. You can edit it or 
 ## annotate it here in this frame. You can also export it to a file using the 
 ## export button. Saving the Hydrosanity project also retains this log. To run 
@@ -192,7 +189,8 @@ sprintf("## Run by %s on %s", Sys.info()["user"], R.version.string), "\n\n",
 library(hydrosanity)
 
 ## The variable hsp is used to store the current Hydrosanity Project. At any 
-## time, type \"str(hsp)\" in the R Console to see what is stored there!")
+## time, type \"str(hsp)\" in the R Console to see what is stored there!"
+	))
 	addLogSeparator()
 }
 
@@ -276,11 +274,20 @@ timeperiodModificationUpdate <- function() {
 regionModificationUpdate <- function() {
 	hsp$modified <<- T
 	
+	# set all pages except "dataset" to be updated
+	tmp <- StateEnv$update$import
+	StateEnv$update[] <- T
+	StateEnv$update$import <- tmp
+	
 	updateNow()
 }
 
 .hs_on_select_all_button_clicked <- function(button) {
 	theWidget("selection_iconview")$selectAll()
+}
+
+.hs_on_select_all_rain_button_clicked <- function(button) {
+	iconViewSetSelection(theWidget("selection_iconview"), "rain")
 }
 
 .hs_on_menu_update_activate <- function(...) {
@@ -320,11 +327,8 @@ regionModificationUpdate <- function() {
 	freezeGUI()
 	on.exit(thawGUI())
 	
-	which_log <- if (theWidget("log_notebook")$getCurrentPage() == 0)
-		"log" else "core_log"
-	
-	filename <- choose.file.save(paste(which_log, "R", sep="."), 
-		caption="Export Log", filters=Filters[c("R","txt","All"),])
+	filename <- choose.file.save("log.R", caption="Export Log", 
+		filters=Filters[c("R","txt","All"),])
 	StateEnv$win$present()
 	if (is.na(filename)) return()
 	
@@ -332,10 +336,9 @@ regionModificationUpdate <- function() {
 		filename <- paste(filename, "R", sep=".")
 	}
 	
-	which_widget <- theWidget(paste(which_log, "_textview", sep=""))
-	write(getTextviewText(which_widget), filename)
+	write(getTextviewText(theWidget("log_textview")), filename)
 	
-	setStatusBar("The ", which_log, " has been exported to ", filename)
+	setStatusBar("The log has been exported to ", filename)
 }
 
 
@@ -455,7 +458,12 @@ select.sites.BOM.AU <- function(siteListFile, archivePath, return.data=FALSE, xl
 			sitename=siteinfo$name[i], dataname="Rain (mm/day)", 
 			dataCol=6, qualCol=7, extraCols=c(9), 
 			extraNames=c("AccumSteps"), readTimesFromFile=F, 
-			startTime=list(year=3, month=4, day=5))
+			startTime=list(year=3, month=4, day=5),
+			timeOffset=as.difftime(9 - 24, units="hours"))
+		# observation covers 24 hours to 9am on the nominal day
+		# but the time series format requires that the time is the start
+		#dataset[[x]]$Time <- dataset[[x]]$Time + 
+		#	as.difftime(9 - 24, units="hours")
 		attr(dataset[[x]], "role") <- "RAIN"
 		myLoc <- c(siteinfo$x[i], siteinfo$y[i])
 		if (!any(is.na(myLoc))) {
