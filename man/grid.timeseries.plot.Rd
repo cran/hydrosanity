@@ -7,22 +7,24 @@
   ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-grid.timeseries.plot(blob.list, xscale = NULL, yscale = NULL, sameScales = T, 
+grid.timeseries.plot(blob.list, xlim = NULL, ylim = NULL, sameScales = T, 
                      logScale = F, qualTimeline = F, colMap = NULL, 
 		     barThickness = unit(0.5,"lines"), auto.key = T, maxLabelChars = 20, 
 		     pad = unit(1,"lines"), between = unit(0,"lines"), superPos = 1, 
 		     newScale = T, main = NULL, sub = T, newpage = (superPos==1), 
 		     nSuperpose = 1, gp=gpar(col=rep(trellis.par.get("superpose.line")$col, len=superPos)[superPos], 
-		       lty=rep(trellis.par.get("superpose.line")$lty, len=superPos)[superPos]))
+		       alpha=rep(trellis.par.get("superpose.line")$alpha, len=superPos)[superPos],
+		       lty=rep(trellis.par.get("superpose.line")$lty, len=superPos)[superPos],
+		       lwd=rep(trellis.par.get("superpose.line")$lwd, len=superPos)[superPos]))
 
-grid.timeseries.plot.superpose(superpose.blob.list, allSameScales = F, xscale = NULL, yscale = NULL, logScale = F, sub = T, ...)
+grid.timeseries.plot.superpose(superpose.blob.list, allSameScales = F, xlim = NULL, ylim = NULL, logScale = F, sub = T, ...)
 
 grid.timeseries.steps(blob, logScale = F, name = "timeseries", gp = NULL, vp = NULL)
 }
 \arguments{
   \item{blob.list}{ ~~Describe \code{blob.list} here~~ }
-  \item{xscale}{ ~~Describe \code{xscale} here~~ }
-  \item{yscale}{ ~~Describe \code{yscale} here~~ }
+  \item{xlim}{ ~~Describe \code{xlim} here~~ }
+  \item{ylim}{ ~~Describe \code{ylim} here~~ }
   \item{sameScales}{ ~~Describe \code{sameScales} here~~ }
   \item{logScale}{ ~~Describe \code{logScale} here~~ }
   \item{qualTimeline}{ ~~Describe \code{qualTimeline} here~~ }

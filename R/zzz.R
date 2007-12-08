@@ -1,9 +1,8 @@
 
 .onAttach <- function(libname, pkgname) {
-	cat(paste(
+	packageStartupMessage(
 	"Hydrosanity: an interface for exploring hydrological time series. ", "\n",
 	"Version ", VERSION, ". ", COPYRIGHT, "\n",
-	"Type \"hydrosanity()\" to start the graphical user interface.", "\n",
-	sep=""))
+	"Type \"hydrosanity()\" to start the graphical user interface.")
 }
 

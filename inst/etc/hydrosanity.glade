@@ -435,10 +435,9 @@ Send bug reports, questions and suggestions to the maintainer.</property>
 				  <property name="left_margin">0</property>
 				  <property name="right_margin">0</property>
 				  <property name="indent">0</property>
-				  <property name="text" translatable="yes">A tutorial (vignette) is, or will be soon, under development.
-A paper giving an introduction to Hydrosanity is included in this distribution.
+				  <property name="text" translatable="yes">An introductory paper is available: RShowDoc(&quot;Andrews_2007_Hydrosanity&quot;, package=&quot;hydrosanity&quot;)
 In the R console type help(package=hydrosanity) to see a list of documented functions.
-Get a quick function definition by typing its name in the R console: e.g. aggregate.timeblob
+Get a quick function definition by typing its name in the R console: e.g. read.timeblob
 The full source code is available from the website (listed above).</property>
 				</widget>
 			      </child>

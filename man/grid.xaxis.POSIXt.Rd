@@ -5,7 +5,7 @@
   ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-grid.xaxis.POSIXt(lim = as.numeric(convertX(unit(c(0,1), "npc"), "native")), label = T, draw = T, name = NULL, ...)
+grid.xaxis.POSIXt(lim = convertX(unit(0:1, "npc"), "native", valueOnly = T), label = T, draw = T, name = NULL, ...)
 }
 \arguments{
   \item{lim}{ ~~Describe \code{lim} here~~ }

@@ -93,9 +93,9 @@ updateCorrPage <- function() {
 	plot.call$sub <- quote(tmp.caption)
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="cross-correlation", 
-		nav.scales="x", 
-		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+	guiDo(playwith(plot.call=plot.call, title="cross-correlation", 
+		time.mode=TRUE, 
+		eval.args="^hsp$", invert.match=TRUE, on.close=restoreHS), 
 		doLog=F)
 	
 	if (length(tmpObjs) > 0) {
@@ -158,7 +158,7 @@ updateCorrPage <- function() {
 			tmp.data <- lapply(tmp.data, aggregate.timeblob, by=.(aggrBy), fun.qual="omit")
 		)
 		if (any(grep("( month|year)", aggrBy))) {
-			aggr.call[[3]]$start.month <- hsp$startMonth
+			aggr.call[[3]]$start.month <- hsp$yearStart
 		}
 		guiDo(call=aggr.call)
 	}
@@ -257,10 +257,9 @@ updateCorrPage <- function() {
 		timestepTimeFormat(attr(tmp.data, "timestep")))
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="rainfall-runoff", 
-		extra.buttons=list("zero", "logscale"),
-		trans.scales=c("x","y"), labels=idLabels, 
-		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
+	guiDo(playwith(plot.call=plot.call, title="rainfall-runoff", 
+		labels=idLabels, 
+		eval.args="^hsp$", invert.match=TRUE, on.close=restoreHS), 
 		doLog=F)
 	
 	if (length(tmpObjs) > 0) {

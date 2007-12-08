@@ -125,9 +125,9 @@ updateImportPage <- function() {
 	tmp2 <- edit(tmp, title=blobName)
 	mostattributes(tmp2) <- attributes(tmp)
 	if (!identical(tmp, tmp2)) {
-		addLogComment("Edited data object ", dQuote(blobName), " interactively.")
+		addLogComment("Edited data object ", shQuote(blobName), " interactively.")
 		hsp$data[[thisIndex]][,-1] <<- tmp2
-		setStatusBar("Edited data object ", dQuote(blobName))
+		setStatusBar("Edited data object ", shQuote(blobName))
 		datasetModificationUpdate()
 	}
 }
@@ -191,8 +191,8 @@ updateImportPage <- function() {
 	
 	for (i in seq(along=filenames)) {
 		result <- guiDo(string=import.string[i])
-		setStatusBar("Imported file ", dQuote(basename(filenames[i])),
-			" to hsp$data[[", dQuote(dataName[i]), "]]")
+		setStatusBar("Imported file ", shQuote(basename(filenames[i])),
+			" to hsp$data[[", shQuote(dataName[i]), "]]")
 		# mark as rain/flow/etc
 		setDataRole(dataName[i], doLogComment=F)
 		# update table etc: inefficient, but gives user more feedback
@@ -215,12 +215,12 @@ updateImportPage <- function() {
 	blobID <- names(hsp$data)[blobIndex]
 	if (new.text == blobID) { return() }
 	if (new.text == "") { return() }
-	addLogComment("Set ID for object ", dQuote(blobID))
+	addLogComment("Set ID for object ", shQuote(blobID))
 	guiDo(call=bquote(
 		names(hsp$data)[.(blobIndex)] <- .(new.text)
 	))
 	
-	setStatusBar("Set ID for object ", dQuote(blobID), " to ", dQuote(new.text))
+	setStatusBar("Set ID for object ", shQuote(blobID), " to ", shQuote(new.text))
 	datasetModificationUpdate()
 }
 
@@ -230,12 +230,12 @@ updateImportPage <- function() {
 	blobName <- attr(hsp$data[[blobIndex]], "sitename")
 	if (new.text == blobName) { return() }
 	if (new.text == "") { return() }
-	addLogComment("Set sitename for object ", dQuote(blobID))
+	addLogComment("Set sitename for object ", shQuote(blobID))
 	guiDo(call=bquote(
 		attr(hsp$data[[.(blobID)]], "sitename") <- .(new.text)
 	))
 	
-	setStatusBar("Set sitename for object ", dQuote(blobID), " to ", dQuote(new.text))
+	setStatusBar("Set sitename for object ", shQuote(blobID), " to ", shQuote(new.text))
 	datasetModificationUpdate()
 }
 
@@ -245,12 +245,12 @@ updateImportPage <- function() {
 	blobDataName <- attr(hsp$data[[blobIndex]], "dataname")
 	if (new.text == blobDataName) { return() }
 	if (new.text == "") { return() }
-	addLogComment("Set dataname for object ", dQuote(blobID))
+	addLogComment("Set dataname for object ", shQuote(blobID))
 	guiDo(call=bquote(
 		attr(hsp$data[[.(blobID)]], "dataname") <- .(new.text)
 	))
 	
-	setStatusBar("Set dataname for object ", dQuote(blobID), " to ", dQuote(new.text))
+	setStatusBar("Set dataname for object ", shQuote(blobID), " to ", shQuote(new.text))
 	datasetModificationUpdate()
 }
 
@@ -367,7 +367,7 @@ updateImportPage <- function() {
 	addLogComment("Remove data object(s)")
 	guiDo(call=bquote(hsp$data[.(blobNames)] <- NULL))
 	
-	setStatusBar('Removed data object(s) ', paste(dQuote(blobNames),collapse=', '))
+	setStatusBar('Removed data object(s) ', paste(shQuote(blobNames),collapse=', '))
 	datasetModificationUpdate()
 }
 
@@ -397,7 +397,7 @@ updateImportPage <- function() {
 				hsp$data[[.(x)]][[.(extraName)]] <- NULL
 			}))
 		}
-		setStatusBar('Extracted extra columns of item ', dQuote(x))
+		setStatusBar('Extracted extra columns of item ', shQuote(x))
 	}
 	datasetModificationUpdate()
 }
@@ -426,7 +426,7 @@ updateImportPage <- function() {
 		guiDo(call=bquote(
 			hsp$data[[.(blobName)]]$Qual <- tmp.factor(hsp$data[[.(blobName)]]$Qual)
 		))
-		setStatusBar("Converted quality codes of object ", dQuote(blobName))
+		setStatusBar("Converted quality codes of object ", shQuote(blobName))
 	}
 	guiDo(rm(tmp.factor))
 	datasetModificationUpdate()
@@ -484,7 +484,7 @@ updateImportPage <- function() {
 	nBlobs <- length(blobIndices)
 	blobNames <- names(hsp$data)[blobIndices]
 	dataString <- paste('hsp$data[',
-		paste(dQuote(blobNames),collapse=", "), ']', sep='')
+		paste(shQuote(blobNames),collapse=", "), ']', sep='')
 	
 	justTimePeriod <- theWidget("export_timeperiod_radiobutton")$getActive()
 	oneFile <- theWidget("export_onefile_radiobutton")$getActive()
@@ -535,9 +535,9 @@ updateImportPage <- function() {
 		}))
 		export.string <- sprintf(
 			'%s(tmp.data, %s%s)', 
-			exportFn, dQuote(filename), myOptionString)
+			exportFn, shQuote(filename), myOptionString)
 		guiDo(string=export.string)
-		setStatusBar("Exported data to ", dQuote(filename))
+		setStatusBar("Exported data to ", shQuote(filename))
 			
 	} else {
 		for (i in seq(along=blobNames)) {
@@ -566,10 +566,10 @@ updateImportPage <- function() {
 			))
 			export.string <- sprintf(
 				'%s(tmp.data, %s%s)', 
-				exportFn, dQuote(myFilename), myOptionString)
+				exportFn, shQuote(myFilename), myOptionString)
 			guiDo(string=export.string)
-			setStatusBar("Exported data item ", dQuote(x), " to ", 
-				dQuote(myFilename))
+			setStatusBar("Exported data item ", shQuote(x), " to ", 
+				shQuote(myFilename))
 		}
 	}
 	
@@ -610,10 +610,10 @@ updateImportPage <- function() {
 		if (aggrFunIdx > 1) { aggr.call[[3]]$FUN <- aggrFun }
 		if (qualFunIdx > 1) { aggr.call[[3]]$fun.qual <- qualFunName }
 		if (any(grep("( month|year)", timestepString))) {
-			aggr.call[[3]]$start.month <- hsp$startMonth
+			aggr.call[[3]]$start.month <- hsp$yearStart
 		}
 		guiDo(call=aggr.call)
-		setStatusBar("Resampled object ", dQuote(x))
+		setStatusBar("Resampled object ", shQuote(x))
 	}
 	
 	datasetModificationUpdate()
@@ -662,7 +662,7 @@ updateImportPage <- function() {
 		))
 	}
 	
-	setStatusBar("Generated ratio of ", nBlobs, " item(s) to ", dQuote(denomName))
+	setStatusBar("Generated ratio of ", nBlobs, " item(s) to ", shQuote(denomName))
 	
 	datasetModificationUpdate()
 }
@@ -686,8 +686,8 @@ setDataRole <- function(blobName, role=NULL, doLogComment=T) {
 	guiDo(call=bquote(
 		attr(hsp$data[[.(blobName)]], "role") <- .(role)
 	))
-	setStatusBar("Set data role for object ", dQuote(blobName), " to ",
-		dQuote(role))
+	setStatusBar("Set data role for object ", shQuote(blobName), " to ",
+		shQuote(role))
 }
 
 .hs_on_import_file_radio_options_toggled <- function(button) {

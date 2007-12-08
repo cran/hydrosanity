@@ -22,9 +22,13 @@ Package home page: \url{http://hydrosanity.googlecode.com/}
 }
 \author{ Felix Andrews \email{felix@nfrac.org} }
 \examples{
-	\dontrun{
-		hydrosanity()
-	}
+\dontrun{
+hydrosanity()
+
+# view the introductory paper
+RShowDoc("Andrews_2007_Hydrosanity", package="hydrosanity")
+
+}
 }
 \keyword{ environment }
 

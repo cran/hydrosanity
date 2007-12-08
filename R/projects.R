@@ -80,7 +80,7 @@ openProject <- function(filename=NULL) {
 	
 	# TODO: if (!is.null(hsp$selection))
 	
-	setStatusBar("Loaded project from ", dQuote(filename))
+	setStatusBar("Loaded project from ", shQuote(filename))
 }
 
 saveProject <- function(filename=NULL, saveAs=F) {
@@ -112,7 +112,7 @@ saveProject <- function(filename=NULL, saveAs=F) {
 	hsp$projectFile <<- filename
 	StateEnv$win['title'] <- paste("Hydrosanity:", get.stem(filename))
 	
-	setStatusBar("Project saved to ", dQuote(filename))
+	setStatusBar("Project saved to ", shQuote(filename))
 }
 
 

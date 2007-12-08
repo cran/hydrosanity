@@ -6,7 +6,7 @@
 
 MAJOR <- "0"
 MINOR <- "8"
-REVISION <- unlist(strsplit("$Revision: 71 $", split=" "))[2]
+REVISION <- unlist(strsplit("$Revision: 76 $", split=" "))[2]
 VERSION <- paste(MAJOR, MINOR, REVISION, sep=".")
 COPYRIGHT <- paste("(c) 2007 Felix Andrews <felix@nfrac.org>\n",
 	" GUI based on Rattle (c) 2006 Graham.Williams@togaware.com")
@@ -304,13 +304,16 @@ regionModificationUpdate <- function() {
 .hs_on_menu_quit_activate <- function(action, window) {
 	freezeGUI()
 	if (exists("hsp") && hsp$modified && (length(hsp$data) > 0)) {
+		#if (gconfirm("Save project?")) {
 		if (!is.null(questionDialog("Save project?"))) {
 			saveProject()
 		}
 	}
-	for (x in ls(plotAndPlayGTK:::StateEnv)) {
-		try(plotAndPlayGTK:::StateEnv[[x]]$win$destroy(), silent=TRUE)
-	}
+	# TODO: only destroy those that are owned by hydrosanity
+	for (x in playDevList()) playDevOff(x)
+	#for (x in ls(plotAndPlayGTK:::StateEnv)) {
+	#	try(plotAndPlayGTK:::StateEnv[[x]]$win$destroy(), silent=TRUE)
+	#}
 	StateEnv$win$destroy()
 	rm(win, GUI, envir=StateEnv)
 }

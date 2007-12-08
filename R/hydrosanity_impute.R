@@ -70,7 +70,7 @@ updateImputePage <- function() {
 			tmp.data <- lapply(tmp.data, aggregate.timeblob, by=.(aggrBy), fun.qual="omit")
 		)
 		if (any(grep("( month|year)", aggrBy))) {
-			aggr.call[[3]]$start.month <- hsp$startMonth
+			aggr.call[[3]]$start.month <- hsp$yearStart
 		}
 		guiDo(call=aggr.call)
 	}

@@ -77,7 +77,7 @@ updateRainPage <- function() {
 		})
 		
 		plot.call <- quote(levelplot(data ~ x * y | which, data={
-				foo <- tmp.data[ii <- gui.index+seq(4)-1, -1]
+				foo <- tmp.data[ii <- cur.index+seq(4)-1, -1]
 				row.names(foo) <- format(tmp.data$Time[ii])
 				dat <- do.call(make.groups, as.data.frame(t(foo)))
 				dat[c('x','y')] <- tmp.locs
@@ -85,7 +85,7 @@ updateRainPage <- function() {
 			}))
 		plot.call$col.regions <- quote(sqrtPalette())
 		plot.call$at <- quote(seq(tmp.range[1], tmp.range[2], length=100))
-		plot.call$gui.step <- 4
+		#plot.call$gui.step <- 4
 	}
 	
 	if (doOverall) {
@@ -100,7 +100,7 @@ updateRainPage <- function() {
 		tmpObjs <- c(tmpObjs, 'tmp.goo')
 		guiDo({
 			tmp.data <- sync.timeblobs(lapply(tmp.data, aggregate.timeblob, 
-				by="years", start.month=hsp$startMonth, fun.qual="omit"))
+				by="years", start.month=hsp$yearStart, fun.qual="omit"))
 			tmp.data$Time <- factor(as.POSIXlt(tmp.data$Time)$year+1900)
 			tmp.goo <- melt(tmp.data, id="Time", variable_name="site")
 			tmp.goo <- cast(tmp.goo, site ~ Time)
@@ -113,8 +113,8 @@ updateRainPage <- function() {
 	if (doQuarters) {
 		guiDo({
 			tmp.data <- sync.timeblobs(lapply(tmp.data, aggregate.timeblob, 
-				by="3 months", start.month=hsp$startMonth, fun.qual="omit"))
-			tmp.data$Season <- waterQuarters(tmp.data$Time, start.month=hsp$startMonth)
+				by="3 months", start.month=hsp$yearStart, fun.qual="omit"))
+			tmp.data$Season <- waterQuarters(tmp.data$Time, start.month=hsp$yearStart)
 		})
 	}
 	if (doMonths) {
@@ -162,20 +162,19 @@ updateRainPage <- function() {
 		#if (FALSE) panel.text(x, y, labels=row.names(points.xy)) TODO
 	}
 	
-	if (!is.null(hsp$region)) {
+	if (length(hsp$region)) {
 		plot.call$xlim <- quote(hsp$region$xlim)
 		plot.call$ylim <- quote(hsp$region$ylim)
 	} else {
 		plot.call$prepanel <- quote(prepanel.extend.10)
 	}
 	
-	myExtras <- if (doRaw) list("index")
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="rainfall mosaic", 
-		extra.buttons=myExtras, 
+	playwith(plot.call=plot.call, name="rainfall mosaic", 
+		time.vector=if (doRaw) tmp.data$Time,
+		time.mode.page.incr=4,
 		labels=rownames(tmp.locs),
-		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
-		doLog=F)
+		eval.args="^hsp$", invert.match=T, on.close=restoreHS)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
@@ -227,11 +226,11 @@ updateRainPage <- function() {
 		)
 		
 		plot.call <- bquote(
-			levelplot(band1 ~ x * y | format(tmp.times[gui.index], 
+			levelplot(band1 ~ x * y | format(cur.time, 
 				.(if (monthsVary) "%Y %b" else "%Y")), 
 				data={
 					fname <- .(filePattern)
-					myGrid <- readGDAL_fixed(format(tmp.times[gui.index], fname))
+					myGrid <- readGDAL_fixed(format(cur.time, fname))
 					as(myGrid, "data.frame")
 				})
 		)
@@ -253,12 +252,11 @@ updateRainPage <- function() {
 		plot.call$ylim <- quote(hsp$region$ylim)
 	}
 	
-	myExtras <- if (yearsVary || monthsVary) list("index")
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="Areal rainfall grids", 
-		extra.buttons=myExtras, labels=NA,
-		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
-		doLog=F)
+	playwith(plot.call=plot.call, title="Areal rainfall grids", 
+		time.vector=if (yearsVary || monthsVary) tmp.times,
+		labels=NA,
+		eval.args="^hsp$", invert.match=T, on.close=restoreHS)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))
@@ -389,10 +387,8 @@ updateRainPage <- function() {
 	}
 	
 	addToLog(paste(deparse(plot.call), collapse="\n"))
-	guiDo(playwith(plot.call=plot.call, name="Thiessen polygons", 
-		extra.buttons=NULL,
-		eval.args="^hsp$", invert=T, restore.on.close=StateEnv$win), 
-		doLog=F)
+	playwith(plot.call=plot.call, title="Thiessen polygons", 
+		eval.args="^hsp$", invert.match=T, on.close=restoreHS)
 	
 	if (length(tmpObjs) > 0) {
 		guiDo(call=bquote(rm(list=.(tmpObjs))))

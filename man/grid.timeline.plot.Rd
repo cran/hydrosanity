@@ -7,7 +7,7 @@
   ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-grid.timeline.plot(blob.list, xscale = NULL, colMap = NULL, barThickness = unit(1.2,"lines"), auto.key = T, maxLabelChars = 20, pad = unit(1,"lines"), grill = T, main = NULL, sub = T, newpage = T)
+grid.timeline.plot(blob.list, xlim = NULL, ylim=NULL, colMap = NULL, barThickness = unit(1.2,"lines"), auto.key = T, maxLabelChars = 20, pad = unit(1,"lines"), grill = T, main = NULL, sub = T, newpage = T)
 
 grid.timeline.bar <- function(blob, colMap = NULL, name = "timeline.bar", vp = NULL)
 
@@ -15,7 +15,8 @@ timelineColMapDefault(colMap = list(good="black", suspect=trellis.par.get("super
 }
 \arguments{
   \item{blob.list}{ ~~Describe \code{blob.list} here~~ }
-  \item{xscale}{ ~~Describe \code{xscale} here~~ }
+  \item{xlim}{ ~~Describe \code{xlim} here~~ }
+  \item{ylim}{ ~~Describe \code{ylim} here~~ }
   \item{colMap}{ ~~Describe \code{colMap} here~~ }
   \item{barThickness}{ ~~Describe \code{thickness} here~~ }
   \item{auto.key}{ ~~Describe \code{auto.key} here~~ }

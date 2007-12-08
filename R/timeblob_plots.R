@@ -2,9 +2,8 @@
 ##
 ## Copyright (c) 2007 Felix Andrews <felix@nfrac.org>, GPL
 
-
-
-grid.timeline.plot <- function(blob.list, xscale=NULL, colMap=NULL, barThickness=unit(1.2,"lines"), auto.key=T, maxLabelChars=20, pad=unit(1,"lines"), grill=T, main=NULL, sub=T, newpage=T) {
+grid.timeline.plot <- function(blob.list, xlim=NULL, ylim=NULL, colMap=NULL, barThickness=unit(1.2,"lines"), auto.key=T, maxLabelChars=20, pad=unit(1,"lines"), grill=T, main=NULL, sub=T, newpage=T) {
+	xscale <- xlim
 	# check types
 	if (!identical(class(blob.list),"list")) { blob.list <- list(blob.list) }
 	if (any(sapply(blob.list, is.timeblob)==F)) { stop("'blob.list' must be a list of timeblobs") }
@@ -65,7 +64,7 @@ grid.timeline.plot <- function(blob.list, xscale=NULL, colMap=NULL, barThickness
 			heights=unit.c(pad, unit(1,"null"), unit(3, "lines")))))
 	# overall plot viewport, and layout for timeline bars
 	pushViewport(viewport(name="time.vp", 
-		layout.pos.col=2, layout.pos.row=2, xscale=xscale,
+		layout.pos.col=2, layout.pos.row=2, xscale=as.numeric(xscale),
 		layout=grid.layout(nBlobs*2+1, 1,
 			heights=unit.c(unit(1,"null"), 
 				rep(unit.c(barThickness, unit(1,"null")), nBlobs)))))
@@ -80,7 +79,7 @@ grid.timeline.plot <- function(blob.list, xscale=NULL, colMap=NULL, barThickness
 	for (k in 1:nBlobs) {
 		# draw timeline bar number k
 		pushViewport(viewport(name=paste("timeline.bar",k,".vp",sep=''),
-			layout.pos.row=k*2, xscale=xscale, clip="on"))
+			layout.pos.row=k*2, xscale=as.numeric(xscale), clip="on"))
 		grid.timeline.bar(blob.list[[k]], colMap=colMap,
 			name=paste("timeline.bar",k,sep=''))
 		# draw label number k
@@ -155,7 +154,12 @@ grid.timeline.bar <- function(blob, colMap=NULL, name="timeline.bar", vp=NULL) {
 }
 
 
-grid.timeseries.plot.superpose <- function(superpose.blob.list, allSameScales=F, xscale=NULL, yscale=NULL, logScale=F, sub=T, ...) {
+lattice.timeline.plot <- function(blob.list, allSameScales=F, xlim=NULL, ylim=NULL, logScale=F, sub=T, ...) {
+	
+}
+
+
+grid.timeseries.plot.superpose <- function(superpose.blob.list, allSameScales=F, xlim=NULL, ylim=NULL, logScale=F, sub=T, ...) {
 	# check types
 	if (!identical(class(superpose.blob.list),"list")) {
 		stop("'superpose.blob.list' must be a list of lists of timeblobs")
@@ -165,36 +169,36 @@ grid.timeseries.plot.superpose <- function(superpose.blob.list, allSameScales=F,
 			stop("'superpose.blob.list' must be a list of lists of timeblobs")
 		}
 	}
-	if (is.null(xscale)) {
-		xscale <- min(lapply(superpose.blob.list, start.timeblobs))
-		xscale[2] <- max(lapply(superpose.blob.list, end.timeblobs))
+	if (is.null(xlim)) {
+		xlim <- min(lapply(superpose.blob.list, start.timeblobs))
+		xlim[2] <- max(lapply(superpose.blob.list, end.timeblobs))
 	} else {
-		xscale <- as.POSIXct(xscale)
-		if (any(is.na(xscale))) { stop("'xscale' must be a pair of valid times (POSIXt)") }
+		xlim <- as.POSIXct(xlim)
+		if (any(is.na(xlim))) { stop("'xlim' must be a pair of valid times (POSIXt)") }
 		for (i in seq(along=superpose.blob.list)) {
 			superpose.blob.list[[i]] <- lapply(superpose.blob.list[[i]],
-				window, xscale[1], xscale[2], inclusive=T)
+				window, xlim[1], xlim[2], inclusive=T)
 		}
 	}
-	# make common yscale
-	if (is.null(yscale) && allSameScales
+	# make common ylim
+	if (is.null(ylim) && allSameScales
 		&& sum(sapply(c(unlist(superpose.blob.list, recursive=F)), nrow) == 0)) {
 		# no data for any series
-		yscale <- c(1, 10)
+		ylim <- c(1, 10)
 	} else
-	if (is.null(yscale) && allSameScales) {
+	if (is.null(ylim) && allSameScales) {
 		allRanges <- sapply.timeblob.data(
 			c(unlist(superpose.blob.list, recursive=F)), 
 			range, finite=T)
-		yscale <- range(allRanges[is.finite(allRanges)])
-		if (logScale && (yscale[1] <= 0)) {
+		ylim <- range(allRanges[is.finite(allRanges)])
+		if (logScale && (ylim[1] <= 0)) {
 			# limit by minimum non-zero value (for log scale)
 			allMins <- sapply.timeblob.data(
 				c(unlist(superpose.blob.list, recursive=F)), 
 				function(x){ min(x[x>0], na.rm=T) })
-			yscale[1] <- min(allMins[is.finite(allMins)])
+			ylim[1] <- min(allMins[is.finite(allMins)])
 		}
-		if (!logScale) { yscale[1] <- 0 }
+		if (!logScale) { ylim[1] <- 0 }
 	}
 	# make caption
 	if (identical(sub, T)) {
@@ -209,17 +213,19 @@ grid.timeseries.plot.superpose <- function(superpose.blob.list, allSameScales=F,
 		this.args$blob.list <- superpose.blob.list[[layer]]
 		this.args$superPos <- layer
 		this.args$nSuperpose <- length(superpose.blob.list)
-		this.args$xscale <- xscale
-		this.args$yscale <- yscale
+		this.args$xlim <- xlim
+		this.args$ylim <- ylim
 		this.args$logScale <- logScale
-		if (!is.null(this.args$yscale)) { this.args$newScale <- F }
+		if (!is.null(this.args$ylim)) { this.args$newScale <- F }
 		this.args$sub <- sub
 		do.call(grid.timeseries.plot, this.args)
 	}
 }
 
 
-grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales=T, logScale=F, qualTimeline=F, colMap=NULL, barThickness=unit(0.5,"lines"), auto.key=T, maxLabelChars=20, pad=unit(1,"lines"), between=unit(0,"lines"), superPos=1, newScale=T, main=NULL, sub=T, newpage=(superPos==1), nSuperpose=1, gp=gpar(col=rep(trellis.par.get("superpose.line")$col, len=superPos)[superPos], lty=rep(trellis.par.get("superpose.line")$lty, len=superPos)[superPos])) {
+grid.timeseries.plot <- function(blob.list, xlim=NULL, ylim=NULL, sameScales=T, logScale=F, qualTimeline=F, colMap=NULL, barThickness=unit(0.5,"lines"), auto.key=T, maxLabelChars=20, pad=unit(1,"lines"), between=unit(0,"lines"), superPos=1, newScale=T, main=NULL, sub=T, newpage=(superPos==1), nSuperpose=1, gp=gpar(col=rep(trellis.par.get("superpose.line")$col, len=superPos)[superPos], alpha=rep(trellis.par.get("superpose.line")$alpha, len=superPos)[superPos], lty=rep(trellis.par.get("superpose.line")$lty, len=superPos)[superPos], lwd=rep(trellis.par.get("superpose.line")$lwd, len=superPos)[superPos])) {
+	xscale <- xlim
+	yscale <- ylim
 	# check types
 	if (!identical(class(blob.list),"list")) { blob.list <- list(blob.list) }
 	if (any(sapply(blob.list, is.timeblob)==F)) { stop("'blob.list' must be a list of timeblobs") }
@@ -301,7 +307,7 @@ grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales
 			heights=unit.c(pad, unit(1,"null"), unit(3, "lines")))))
 		# overall plot viewport, and layout for timeseries plots
 		pushViewport(viewport(name="time.vp", 
-			layout.pos.col=2, layout.pos.row=2, xscale=xscale,
+			layout.pos.col=2, layout.pos.row=2, xscale=as.numeric(xscale),
 			layout=grid.layout(nBlobs*3, 1,
 			heights=rep(unit.c(between, unit(1,"null"), barThickness), nBlobs))))
 		# draw time axis with labels at bottom of plot
@@ -357,7 +363,7 @@ grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales
 			pushViewport(viewport(
 				name=paste("timeseries",k,".vp",sep=''),
 				layout.pos.row=k*3-1, 
-				xscale=xscale, yscale=myYScale, clip="on"))
+				xscale=as.numeric(xscale), yscale=myYScale, clip="on"))
 		} else {
 			# navigate down to where timeseries number k was plotted
 			downViewport(paste("timeseries",k,".vp",sep=''))
@@ -365,14 +371,14 @@ grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales
 				# push a new viewport to change scales
 				pushViewport(viewport(
 					name=paste("timeseries",k,"/",superPos,".vp",sep=''),
-					xscale=xscale, yscale=myYScale, clip="on"))
+					xscale=as.numeric(xscale), yscale=myYScale, clip="on"))
 			}
 		}
 		grid.timeseries.steps(blob.list[[k]], logScale=logScale,
 			gp=gp, name=paste("timeseries",k,sep=''))
 		# draw frame and axes
 		if (superPos == 1) {
-			pushViewport(viewport(xscale=xscale, yscale=myYScale, 
+			pushViewport(viewport(xscale=as.numeric(xscale), yscale=myYScale, 
 				clip="off"))
 			grid.rect()
 			if (logScale) {
@@ -388,10 +394,10 @@ grid.timeseries.plot <- function(blob.list, xscale=NULL, yscale=NULL, sameScales
 			# draw timeline bar and x-axis
 			if (qualTimeline) {
 				pushViewport(viewport(y=0, height=barThickness, 
-					just="top", xscale=xscale, clip="off"))
+					just="top", xscale=as.numeric(xscale), clip="off"))
 				if (nBlobs <= 4) { grid.xaxis.POSIXt(label=F) }
 				grid.lines(y=0)
-				pushViewport(viewport(xscale=xscale, clip="on"))
+				pushViewport(viewport(xscale=as.numeric(xscale), clip="on"))
 				grid.timeline.bar(blob.list[[k]], colMap=colMap,
 					name=paste("timeline.bar",k,sep=''))
 				upViewport(2)
@@ -645,8 +651,8 @@ lattice.x.prettylog <- function(lim, ...) {
 	return(tmp)
 }
 
-# lim should be POSIXct or numeric (see as.numeric.POSIXct)
-timeAxisComponents <- function(lim, label=T, tz="GMT") {
+# lim should be POSIXct or numeric equivalent (i.e. secs since 1970)
+timeAxisComponents <- function(lim, label=TRUE, tz="GMT") {
 	if (length(lim) != 2) { stop("'lim' must be of length 2") }
 	if (is.numeric(lim)) {
 		class(lim) <- c("POSIXt", "POSIXct")
@@ -772,14 +778,22 @@ timeAxisComponents <- function(lim, label=T, tz="GMT") {
 	return(list(at=at, label=atLabels))
 }
 
-grid.xaxis.POSIXt <- function(lim=as.numeric(convertX(unit(c(0,1), "npc"), "native")), label=T, draw=T, name=NULL, ...) {
+timeAxis <- function(side, at=NULL, labels=TRUE, ..., tz="GMT") {
+	range <- par("usr")[if (side%%2) 1:2 else 3:4]
+	axisStuff <- timeAxisComponents(range, label=labels, tz=tz)
+	labels <- axisStuff$label
+	labels[labels == ""] <- NA
+	axis(side, at=axisStuff$at, labels=labels, ...)
+}
+
+grid.xaxis.POSIXt <- function(lim=convertX(unit(0:1,"npc"), "native", valueOnly=T), 
+	label=T, draw=T, name=NULL, ...)
+{
 	axisStuff <- timeAxisComponents(lim, label=label)
-	if (label==F) { axisStuff$label <- F }
+	if (label==F) axisStuff$label <- F
 	tmp <- xaxisGrob(at=axisStuff$at, label=axisStuff$label, name=name, ...)
-	if (label) {
-		tmp <- editGrob(tmp, gPath=gPath("labels"), check.overlap=F)
-	}
-	if (draw) { grid.draw(tmp) }
+	if (label) tmp <- editGrob(tmp, gPath=gPath("labels"), check.overlap=F)
+	if (draw) grid.draw(tmp)
 	tmp
 }
 
